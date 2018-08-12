@@ -1,0 +1,9 @@
+{
+  "host": "",
+  "port": 8080,
+  "db": {
+    "url": "https://geolite.maxmind.com/download/geoip/database",
+    "file": "GeoLite2-City.mmdb.gz",
+    "checksum": "GeoLite2-City.md5"
+  }
+}
