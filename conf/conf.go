@@ -21,6 +21,7 @@ type DbFile struct {
 	URL      string `json:"url"`
 	File     string `json:"file"`
 	CheckSum string `json:"checksum"`
+	Format   string `json:"format"`
 }
 
 // Cfg is configuration settings struct.
@@ -50,7 +51,7 @@ func New(filename string) (*Cfg, error) {
 	if err != nil {
 		return nil, err
 	}
-	storage, err := db.GetDb(c.Db.URL, c.Db.File, c.Db.CheckSum)
+	storage, err := db.GetDb(c.Db.URL, c.Db.File, c.Db.CheckSum, c.Db.Format)
 	if err != nil {
 		return nil, err
 	}

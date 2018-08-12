@@ -11,6 +11,7 @@ import (
 	"os"
 	"fmt"
 	"flag"
+	"github.com/z0rr0/ipinfo/conf"
 )
 
 const (
@@ -39,13 +40,13 @@ var (
 
 
 func main() {
-	defer func() {
-		if r := recover(); r != nil {
-			loggerInfo.Printf("abnormal termination [%v]: \n\t%v\n", Version, r)
-		}
-	}()
+	//defer func() {
+	//	if r := recover(); r != nil {
+	//		loggerInfo.Printf("abnormal termination [%v]: \n\t%v\n", Version, r)
+	//	}
+	//}()
 	version := flag.Bool("version", false, "show version")
-	//config := flag.String("config", Config, "configuration file")
+	config := flag.String("config", Config, "configuration file")
 	flag.Parse()
 
 	if *version {
@@ -54,5 +55,9 @@ func main() {
 		return
 	}
 
-
+	cfg, err := conf.New(*config)
+	if err != nil {
+		panic(err)
+	}
+	fmt.Println(cfg)
 }
