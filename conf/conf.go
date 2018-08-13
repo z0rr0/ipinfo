@@ -7,7 +7,9 @@ package conf
 
 import (
 	"encoding/json"
+	"fmt"
 	"io/ioutil"
+	"net"
 	"os"
 	"path/filepath"
 	"strings"
@@ -30,6 +32,11 @@ type Cfg struct {
 	Port    uint   `json:"port"`
 	Db      DbFile `json:"db"`
 	Storage *geoip2.Reader
+}
+
+// Addr returns service's net address.
+func (c *Cfg) Addr() string {
+	return net.JoinHostPort(c.Host, fmt.Sprint(c.Port))
 }
 
 // New returns new rates configuration.
