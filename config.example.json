@@ -6,5 +6,12 @@
     "file": "GeoLite2-City.mmdb",
     "checksum": "GeoLite2-City.md5",
     "format": ".gz"
-  }
+  },
+  "ignore_headers": [
+    "X-Forwarded-For",
+    "X-Forwarded-Proto",
+    "X-Real-Ip",
+    "X-Real-RemoteIp"
+  ],
+  "ip_header": "X-Real-Ip"
 }

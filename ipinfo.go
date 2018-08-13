@@ -79,7 +79,7 @@ func main() {
 	loggerInfo.Printf("listen addr: %v\n", srv.Addr)
 	http.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
 		loggerInfo.Printf("request %v\n", r.RemoteAddr)
-		host, _, err := net.SplitHostPort(r.RemoteAddr)
+		host, err := cfg.GetIP(r)
 		if err != nil {
 			fmt.Fprintln(w, "ERROR")
 			return
@@ -90,9 +90,11 @@ func main() {
 
 		fmt.Fprintln(w, "\nHeaders\n---------")
 		for k, v := range r.Header {
-			fmt.Fprintf(w, "%v: %v\n", k, strings.Join(v, "; "))
+			if !cfg.IsIgnoredHeader(k) {
+				fmt.Fprintf(w, "%v: %v\n", k, strings.Join(v, "; "))
+			}
 		}
-
+		// init form load
 		r.FormValue("test")
 		fmt.Fprintln(w, "\nParams\n---------")
 		for k, v := range r.Form {

@@ -4,6 +4,7 @@ VERSION=`bash version.sh`
 MAIN=github.com/z0rr0/ipinfo
 SOURCEDIR=src/$(MAIN)
 CONTAINER=container_build.sh
+DOCKER_TAG=z0rr0/ipinfo
 
 
 all: test
@@ -26,7 +27,7 @@ test: lint
 
 docker: lint
 	bash $(CONTAINER)
-	docker build -t $(PROGRAM) .
+	docker build -t $(DOCKER_TAG) .
 
 arm:
 	env GOOS=linux GOARCH=arm go install -ldflags "$(VERSION)" $(MAIN)
@@ -35,4 +36,4 @@ linux:
 	env GOOS=linux GOARCH=amd64 go install -ldflags "$(VERSION)" $(MAIN)
 
 clean:
-	rm -rf $(GOPATH)/$(BIN) $(GOPATH)/$(SOURCEDIR)/*.out
+	rm -rf $(GOPATH)/bin/$(PROGRAM) $(GOPATH)/bin/alpine $(GOPATH)/$(SOURCEDIR)/*.out

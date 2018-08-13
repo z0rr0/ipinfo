@@ -5,7 +5,7 @@ RUN apk update && \
     apk add ca-certificates tzdata
 ADD ipinfo /bin/ipinfo
 RUN chmod 0755 /bin/ipinfo
-EXPOSE 8070
+EXPOSE 8082
 VOLUME ["/data/conf/"]
 ENTRYPOINT ["ipinfo"]
 CMD ["-config", "/data/conf/ipinfo.json"]

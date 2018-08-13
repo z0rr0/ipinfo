@@ -24,7 +24,7 @@ $GOPATH/bin/ipinfo -config ipinfo.json
 For docker container
 
 ```bash
-docker run --rm --name ipinfo -p 8070:8070 -v /mydir:/data/conf:ro ipinfo
+docker run --rm --name ipinfo -p 8080:8080 -v /mydir:/data/conf:ro ipinfo
 ```
 
 ### License
