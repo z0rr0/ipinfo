@@ -6,6 +6,7 @@
 package db
 
 import (
+	"compress/gzip"
 	"crypto/md5"
 	"encoding/hex"
 	"fmt"
@@ -16,7 +17,6 @@ import (
 	"os"
 	"path/filepath"
 
-	"compress/gzip"
 	"github.com/oschwald/geoip2-golang"
 )
 
@@ -25,67 +25,36 @@ var (
 	loggerInfo = log.New(os.Stdout, "INFO [db]: ", log.Ldate|log.Ltime|log.Lshortfile)
 )
 
-func extract(archivedFile, filePath string) error {
-	loggerInfo.Printf("extract %v\n", archivedFile)
-	if archivedFile == "" {
-		return fmt.Errorf("empty file name")
-	}
-
-	gzFd, err := os.Open(archivedFile)
-	if err != nil {
-		return err
-	}
-	defer gzFd.Close()
-
-	fd, err := os.Create(filePath)
-	if err != nil {
-		return err
-	}
-	defer fd.Close()
-
-	f, err := gzip.NewReader(gzFd)
-	if err != nil {
-		return err
-	}
-	defer f.Close()
-
-	_, err = io.Copy(fd, f)
-	if err != nil {
-		return err
-	}
-	loggerInfo.Printf("extracted file %v\n", filePath)
-	return nil
-}
-
-func link(url, fileName, format string) string {
-	return fmt.Sprintf("%v/%v%v", url, fileName, format)
-}
-
-func download(url, fileName, format string) error {
-	loggerInfo.Printf("download db: %v\n", url)
-
+func download(url, fileName string) error {
 	resp, err := http.Get(url)
 	if err != nil {
 		return err
 	}
 	defer resp.Body.Close()
 
-	archivedFile := fileName + format
-	fd, err := os.Create(archivedFile)
+	fd, err := os.Create(fileName)
 	if err != nil {
 		return err
 	}
 	defer fd.Close()
 
-	_, err = io.Copy(fd, resp.Body)
+	// ungzip
+	fz, err := gzip.NewReader(resp.Body)
 	if err != nil {
 		return err
 	}
-	return extract(archivedFile, fileName)
+	defer fz.Close()
+
+	_, err = io.Copy(fd, fz)
+	if err != nil {
+		return err
+	}
+	loggerInfo.Printf("file %v downloaded and extracted\n", fileName)
+	return nil
 }
 
-func checkMD5(url, sumFile, dbFile, fileName, format string) error {
-	loggerInfo.Printf("check md5sum: %v\n", fileName)
+func checkMD5(url, dbFielURL, fileName string) error {
+	loggerInfo.Printf("check md5sum of %v\n", fileName)
 	fd, err := os.Open(fileName)
 	if err != nil {
 		return err
@@ -98,7 +67,7 @@ func checkMD5(url, sumFile, dbFile, fileName, format string) error {
 	}
 	currentMD5 := hex.EncodeToString(h.Sum(nil))
 
-	resp, err := http.Get(link(url, sumFile, ""))
+	resp, err := http.Get(url)
 	if err != nil {
 		return err
 	}
@@ -110,32 +79,36 @@ func checkMD5(url, sumFile, dbFile, fileName, format string) error {
 	bodyBytes, err := ioutil.ReadAll(resp.Body)
 	newMD5 := string(bodyBytes)
 	if currentMD5 == newMD5 {
-		// md5 sum didn't change
+		loggerInfo.Println("md5sum is same")
 		return nil
 	}
 	loggerInfo.Printf("diff md5sum %v!=%v\n", currentMD5, newMD5)
-	// md5 sum is differ, download new db file
-	// ignore error
-	os.Remove(fileName)
-	return download(link(url, dbFile, format), fileName, format)
+	os.Remove(fileName) // ignore error
+	return download(dbFielURL, fileName)
 }
 
-// GetDb downloads and save IP database.
+// GetDb downloads and saves IP database.
 func GetDb(url, file, checkSum, format string) (*geoip2.Reader, error) {
 	tmp := os.TempDir()
-	fileName := filepath.Join(tmp, file)
-	if _, err := os.Stat(fileName); os.IsNotExist(err) {
+	localFileName := filepath.Join(tmp, file)
+	dbFileURL := fmt.Sprintf("%v/%v%v", url, file, format)
+	checksumURL := fmt.Sprintf("%v/%v", url, checkSum)
+
+	loggerInfo.Printf("get db:\n\tlocal file: %v\n\tdownload link: %v\n\tchecksum link: %v\n",
+		localFileName, dbFileURL, checksumURL)
+
+	if _, err := os.Stat(localFileName); os.IsNotExist(err) {
 		// download 1st time
-		err = download(link(url, file, format), fileName, format)
+		err = download(dbFileURL, localFileName)
 		if err != nil {
 			return nil, err
 		}
 	} else {
 		// checksum
-		err = checkMD5(url, checkSum, file, fileName, format)
+		err = checkMD5(checksumURL, dbFileURL, localFileName)
 		if err != nil {
 			return nil, err
 		}
 	}
-	return geoip2.Open(fileName)
+	return geoip2.Open(localFileName)
 }

@@ -6,11 +6,10 @@
 package main
 
 import (
-	"runtime"
-	"log"
-	"os"
-	"fmt"
 	"flag"
+	"fmt"
+	"runtime"
+
 	"github.com/z0rr0/ipinfo/conf"
 )
 
@@ -34,10 +33,9 @@ var (
 	GoVersion = runtime.Version()
 
 	// internal logger
-	loggerInfo = log.New(os.Stdout, fmt.Sprintf("INFO [%v]: ", Name),
-		log.Ldate|log.Ltime|log.Lshortfile)
+	//loggerInfo = log.New(os.Stdout, fmt.Sprintf("INFO [%v]: ", Name),
+	//	log.Ldate|log.Ltime|log.Lshortfile)
 )
-
 
 func main() {
 	//defer func() {
