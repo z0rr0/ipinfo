@@ -1,5 +1,7 @@
 # IPINFO
 
+[![GoDoc](https://godoc.org/github.com/z0rr0/ipinfo?status.svg)](https://godoc.org/github.com/z0rr0/ipinfo)
+
 IP info web service.
 
 
