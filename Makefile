@@ -54,5 +54,5 @@ linux:
 	env GOOS=linux GOARCH=amd64 go install -ldflags "$(VERSION)" $(MAIN)
 
 clean: stop
-	rm -rf $(BIN)/* $(GOPATH)/$(SOURCEDIR)/*.out
-	find $(GOPATH)/$(SOURCEDIR)/ -type f -name "*out" -delete
+	rm -rf $(BIN)/*
+	find $(GOPATH)/$(SOURCEDIR)/ -type f -name "*.out" -print0 -delete
