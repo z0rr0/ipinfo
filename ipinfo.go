@@ -81,6 +81,7 @@ func main() {
 		loggerInfo.Printf("request %v\n", r.RemoteAddr)
 		host, err := cfg.GetIP(r)
 		if err != nil {
+			loggerInfo.Println(err)
 			fmt.Fprintln(w, "ERROR")
 			return
 		}
