@@ -10,7 +10,6 @@ import (
 	"flag"
 	"fmt"
 	"log"
-	"net"
 	"net/http"
 	"os"
 	"os/signal"
@@ -66,7 +65,7 @@ func main() {
 	if err != nil {
 		panic(err)
 	}
-	defer cfg.Storage.Close()
+	defer cfg.Close()
 
 	srv := &http.Server{
 		Addr:           cfg.Addr(),
@@ -78,11 +77,20 @@ func main() {
 	}
 	loggerInfo.Printf("listen addr: %v\n", srv.Addr)
 	http.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
-		loggerInfo.Printf("request %v\n", r.RemoteAddr)
+		start, code := time.Now(), http.StatusOK
+		defer func() {
+			loggerInfo.Printf("%-5v %v\t%-12v\t%v",
+				r.Method,
+				code,
+				time.Since(start),
+				r.RemoteAddr,
+			)
+		}()
 		host, err := cfg.GetIP(r)
 		if err != nil {
 			loggerInfo.Println(err)
-			fmt.Fprintln(w, "ERROR")
+			code = http.StatusInternalServerError
+			http.Error(w, "ERROR", code)
 			return
 		}
 		// main info
@@ -102,8 +110,7 @@ func main() {
 			fmt.Fprintf(w, "%v: %v\n", k, strings.Join(v, "; "))
 		}
 		// additional info
-		ip := net.ParseIP(host)
-		city, err := cfg.Storage.City(ip)
+		city, err := cfg.GetCity(host)
 		if err == nil {
 			fmt.Fprintln(w, "\nLocations\n---------")
 			isoCode := strings.ToLower(city.Country.IsoCode)

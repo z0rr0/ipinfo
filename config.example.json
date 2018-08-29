@@ -13,5 +13,6 @@
     "X-Real-Ip",
     "X-Real-RemoteIp"
   ],
-  "ip_header": "X-Real-Ip"
+  "ip_header": "X-Real-Ip",
+  "cache_size": 128
 }

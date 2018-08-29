@@ -16,6 +16,7 @@ import (
 	"sort"
 	"strings"
 
+	"github.com/hashicorp/golang-lru"
 	"github.com/oschwald/geoip2-golang"
 	"github.com/z0rr0/ipinfo/db"
 )
@@ -35,7 +36,9 @@ type Cfg struct {
 	Db            DbFile   `json:"db"`
 	IgnoreHeaders []string `json:"ignore_headers"`
 	IPHeader      string   `json:"ip_header"`
-	Storage       *geoip2.Reader
+	CacheSize     int      `json:"cache_size"`
+	storage       *geoip2.Reader
+	cache         *lru.Cache
 }
 
 // Addr returns service's net address.
@@ -71,6 +74,32 @@ func (c *Cfg) GetIP(r *http.Request) (string, error) {
 	return "", fmt.Errorf("not real ip header")
 }
 
+// GetCity returns city info found by IP address.
+func (c *Cfg) GetCity(host string) (*geoip2.City, error) {
+	if c.cache != nil {
+		if v, ok := c.cache.Get(host); ok {
+			return v.(*geoip2.City), nil
+		}
+	}
+	ip := net.ParseIP(host)
+	city, err := c.storage.City(ip)
+	if err != nil {
+		return nil, err
+	}
+	if c.cache != nil {
+		c.cache.Add(host, city)
+	}
+	return city, nil
+}
+
+// Close closes db storage file.
+func (c *Cfg) Close() error {
+	if c.storage != nil {
+		return c.storage.Close()
+	}
+	return nil
+}
+
 // New returns new rates configuration.
 func New(filename string) (*Cfg, error) {
 	fullPath, err := filepath.Abs(strings.Trim(filename, " "))
@@ -100,6 +129,14 @@ func New(filename string) (*Cfg, error) {
 	if err != nil {
 		return nil, err
 	}
-	c.Storage = storage
+	c.storage = storage
+
+	if c.CacheSize > 0 {
+		cache, err := lru.New(c.CacheSize)
+		if err != nil {
+			return nil, err
+		}
+		c.cache = cache
+	}
 	return c, nil
 }
