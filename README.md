@@ -20,6 +20,16 @@ make docker
 ### Run
 
 ```bash
+# start
+make start
+
+# stop
+make stop
+
+# restart
+make restart
+
+# run with custom config
 $GOPATH/bin/ipinfo -config ipinfo.json
 ```
 
