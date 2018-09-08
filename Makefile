@@ -10,6 +10,7 @@ CONFIG=config.example.json
 
 PID=/tmp/.$(PROJECTNAME).pid
 STDERR=/tmp/.$(PROJECTNAME)-stderr.txt
+
 # MAKEFLAGS += --silent
 
 all: test
@@ -26,6 +27,10 @@ lint: install
 	golint $(MAIN)/conf
 
 test: lint
+	# copy test config
+	cp $(GOPATH)/$(SOURCEDIR)/$(CONFIG) /tmp/
+
+	go test -race -v -cover -coverprofile=conf_coverage.out -trace conf_trace.out $(MAIN)/conf
 	# go tool cover -html=coverage.out
 	# go tool trace ratest.test trace.out
 	# go test -race -v -cover -coverprofile=coverage.out -trace trace.out $(MAIN)
