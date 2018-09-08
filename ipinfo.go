@@ -55,9 +55,10 @@ func main() {
 	config := flag.String("config", Config, "configuration file")
 	flag.Parse()
 
+	versionInfo := fmt.Sprintf("\tVersion: %v\n\tRevision: %v\n\tBuild date: %v\n\tGo version: %v",
+		Version, Revision, BuildDate, GoVersion)
 	if *version {
-		fmt.Printf("\tVersion: %v\n\tRevision: %v\n\tBuild date: %v\n\tGo version: %v\n",
-			Version, Revision, BuildDate, GoVersion)
+		fmt.Println(versionInfo)
 		return
 	}
 
@@ -75,7 +76,7 @@ func main() {
 		MaxHeaderBytes: 1 << 20, // 1MB
 		ErrorLog:       loggerInfo,
 	}
-	loggerInfo.Printf("listen addr: %v\n", srv.Addr)
+	loggerInfo.Printf("\n%v\nlisten addr: %v\n", versionInfo, srv.Addr)
 	http.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
 		start, code := time.Now(), http.StatusOK
 		defer func() {
