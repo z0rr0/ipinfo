@@ -27,9 +27,7 @@ lint: install
 	golint $(MAIN)/conf
 
 test: lint
-	# copy test config
-	cp $(GOPATH)/$(SOURCEDIR)/$(CONFIG) /tmp/
-
+	@-cp $(GOPATH)/$(SOURCEDIR)/$(CONFIG) /tmp/
 	go test -race -v -cover -coverprofile=conf_coverage.out -trace conf_trace.out $(MAIN)/conf
 	# go tool cover -html=coverage.out
 	# go tool trace ratest.test trace.out
