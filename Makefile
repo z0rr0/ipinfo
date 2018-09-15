@@ -37,6 +37,10 @@ docker: lint
 	bash $(CONTAINER)
 	docker build -t $(DOCKER_TAG) .
 
+docker-no-cache: lint
+	bash $(CONTAINER)
+	docker build --no-cache -t $(DOCKER_TAG) .
+
 start: install
 	@echo "  >  $(PROJECTNAME)"
 	@-$(BIN)/$(PROJECTNAME) -config config.example.json & echo $$! > $(PID)
