@@ -1,12 +1,7 @@
 {
   "host": "",
   "port": 8080,
-  "db": {
-    "url": "https://geolite.maxmind.com/download/geoip/database",
-    "file": "GeoLite2-City.mmdb",
-    "checksum": "GeoLite2-City.md5",
-    "format": ".gz"
-  },
+  "db": "/tmp/mmd_storage/GeoLite2-City.mmdb",
   "ignore_headers": [
     "X-Forwarded-For",
     "X-Forwarded-Proto",

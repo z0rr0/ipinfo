@@ -1,4 +1,4 @@
-// Copyright 2018 Alexander Zaytsev <thebestzorro@yandex.ru>.
+// Copyright 2020 Alexander Zaytsev <thebestzorro@yandex.ru>.
 // All rights reserved. Use of this source code is governed
 // by a BSD-style license that can be found in the LICENSE file.
 
@@ -66,8 +66,11 @@ func main() {
 	if err != nil {
 		panic(err)
 	}
-	defer cfg.Close()
-
+	defer func() {
+		if err := cfg.Close(); err != nil {
+			loggerInfo.Printf("cfg close error: %v\n", err)
+		}
+	}()
 	srv := &http.Server{
 		Addr:           cfg.Addr(),
 		Handler:        http.DefaultServeMux,

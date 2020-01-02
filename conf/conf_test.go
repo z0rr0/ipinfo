@@ -1,4 +1,4 @@
-// Copyright 2018 Alexander Zaytsev <thebestzorro@yandex.ru>.
+// Copyright 2020 Alexander Zaytsev <thebestzorro@yandex.ru>.
 // All rights reserved. Use of this source code is governed
 // by a BSD-style license that can be found in the LICENSE file.
 
@@ -59,7 +59,7 @@ func TestCfg_IsIgnoredHeader(t *testing.T) {
 		t.Error("expected false for bad header value")
 	}
 	if !cfg.IsIgnoredHeader(cfg.IgnoreHeaders[0]) {
-		t.Error("expected true for valud header value")
+		t.Error("expected true for valid header value")
 	}
 }
 

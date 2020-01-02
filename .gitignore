@@ -13,3 +13,4 @@
 config.local.json
 ipinfo.json
 ipinfo
+local_storage/*

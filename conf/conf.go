@@ -1,4 +1,4 @@
-// Copyright 2018 Alexander Zaytsev <thebestzorro@yandex.ru>.
+// Copyright 2020 Alexander Zaytsev <thebestzorro@yandex.ru>.
 // All rights reserved. Use of this source code is governed
 // by a BSD-style license that can be found in the LICENSE file.
 
@@ -21,19 +21,11 @@ import (
 	"github.com/z0rr0/ipinfo/db"
 )
 
-// DbFile is storage configuration struct.
-type DbFile struct {
-	URL      string `json:"url"`
-	File     string `json:"file"`
-	CheckSum string `json:"checksum"`
-	Format   string `json:"format"`
-}
-
 // Cfg is configuration settings struct.
 type Cfg struct {
 	Host          string   `json:"host"`
 	Port          uint     `json:"port"`
-	Db            DbFile   `json:"db"`
+	Db            string   `json:"db"`
 	IgnoreHeaders []string `json:"ignore_headers"`
 	IPHeader      string   `json:"ip_header"`
 	CacheSize     int      `json:"cache_size"`
@@ -125,12 +117,11 @@ func New(filename string) (*Cfg, error) {
 		c.IgnoreHeaders[k] = strings.ToUpper(v)
 	}
 	// db storage
-	storage, err := db.GetDb(c.Db.URL, c.Db.File, c.Db.CheckSum, c.Db.Format)
+	storage, err := db.GetDb(c.Db)
 	if err != nil {
 		return nil, err
 	}
 	c.storage = storage
-
 	if c.CacheSize > 0 {
 		cache, err := lru.New(c.CacheSize)
 		if err != nil {
