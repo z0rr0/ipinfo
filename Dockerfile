@@ -6,6 +6,6 @@ RUN apk update && \
 ADD ipinfo /bin/ipinfo
 RUN chmod 0755 /bin/ipinfo
 EXPOSE 8082
-VOLUME ["/data/conf/", "/data/db/"]
+VOLUME ["/data/conf/"]
 ENTRYPOINT ["ipinfo"]
 CMD ["-config", "/data/conf/ipinfo.json"]
