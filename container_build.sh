@@ -6,7 +6,7 @@ TARGET="${GOPATH}/bin/alpine"
 ATTRS="$(/bin/bash version.sh)"
 IDCMD=$(command -v id)
 DCMD=$(command -v docker)
-PERM="${IDCMD} -u ${USER}:${IDCMD} -g ${USER}"
+PERM="$(${IDCMD} -u ${USER}):$(${IDCMD} -g ${USER})"
 
 if [ -z "$DCMD" ]; then
   echo "docker not found"
@@ -16,7 +16,7 @@ fi
 rm -rf "${TARGET}"
 mkdir -p "${TARGET}"/bin "${TARGET}"/pkg
 
-$$DCMD run --rm --user "${PERM}" \
+$DCMD run --rm --user "${PERM}" \
   --volume "${SOURCES}":/usr/p/src:ro \
   --volume "${TARGET}"/pkg:/usr/p/pkg \
   --volume "${TARGET}"/bin:/usr/p/bin \
@@ -30,4 +30,4 @@ if [[ $? -gt 0 ]]; then
   exit 2
 fi
 
-cp -v "${TARGET}":/bin/ipinfo ./
+cp -v "${TARGET}"/bin/ipinfo ./

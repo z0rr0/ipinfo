@@ -134,7 +134,7 @@ func New(filename string) (*Cfg, error) {
 func (c *Cfg) GetHeaders(r *http.Request) []StrParam {
 	result := make([]StrParam, 0, len(r.Header))
 	for k, v := range r.Header {
-		if !c.ih[k] {
+		if !c.ih[strings.ToUpper(k)] {
 			// header is not ignored
 			result = append(result, StrParam{k, strings.Join(v, "; ")})
 		}
