@@ -18,37 +18,36 @@ import (
 
 	"github.com/hashicorp/golang-lru"
 	"github.com/oschwald/geoip2-golang"
-	"github.com/z0rr0/ipinfo/db"
 )
 
 // Cfg is configuration settings struct.
 type Cfg struct {
-	Host          string   `json:"host"`
-	Port          uint     `json:"port"`
-	Db            string   `json:"db"`
-	IgnoreHeaders []string `json:"ignore_headers"`
-	IPHeader      string   `json:"ip_header"`
-	CacheSize     int      `json:"cache_size"`
+	Host          string          `json:"host"`
+	Port          uint            `json:"port"`
+	Db            string          `json:"db"`
+	IgnoreHeaders []string        `json:"ignore_headers"`
+	IPHeader      string          `json:"ip_header"`
+	CacheSize     int             `json:"cache_size"`
+	ih            map[string]bool // ignored header map
 	storage       *geoip2.Reader
 	cache         *lru.Cache
 }
 
+// StrParam is common struct for headers and form params.
+type StrParam struct {
+	Name  string
+	Value string
+}
+
+type stringParams []StrParam
+
+func (a stringParams) Len() int           { return len(a) }
+func (a stringParams) Swap(i, j int)      { a[i], a[j] = a[j], a[i] }
+func (a stringParams) Less(i, j int) bool { return a[i].Name < a[j].Name }
+
 // Addr returns service's net address.
 func (c *Cfg) Addr() string {
 	return net.JoinHostPort(c.Host, fmt.Sprint(c.Port))
-}
-
-// IsIgnoredHeader return true is requested header is to be ignored.
-func (c *Cfg) IsIgnoredHeader(h string) bool {
-	l := len(c.IgnoreHeaders)
-	if l == 0 {
-		return false
-	}
-	header := strings.ToUpper(h)
-	if i := sort.SearchStrings(c.IgnoreHeaders, header); i < l && c.IgnoreHeaders[i] == header {
-		return true
-	}
-	return false
 }
 
 // GetIP return string IP address.
@@ -111,13 +110,12 @@ func New(filename string) (*Cfg, error) {
 	if err != nil {
 		return nil, err
 	}
-	sort.Strings(c.IgnoreHeaders)
-	// uppercase
-	for k, v := range c.IgnoreHeaders {
-		c.IgnoreHeaders[k] = strings.ToUpper(v)
+	c.ih = make(map[string]bool)
+	for _, h := range c.IgnoreHeaders {
+		c.ih[strings.ToUpper(h)] = true
 	}
 	// db storage
-	storage, err := db.GetDb(c.Db)
+	storage, err := geoip2.Open(c.Db)
 	if err != nil {
 		return nil, err
 	}
@@ -130,4 +128,28 @@ func New(filename string) (*Cfg, error) {
 		c.cache = cache
 	}
 	return c, nil
+}
+
+// GetHeaders returns sorted request headers excluding ignored values.
+func (c *Cfg) GetHeaders(r *http.Request) []StrParam {
+	result := make([]StrParam, 0, len(r.Header))
+	for k, v := range r.Header {
+		if !c.ih[k] {
+			// header is not ignored
+			result = append(result, StrParam{k, strings.Join(v, "; ")})
+		}
+	}
+	sort.Sort(stringParams(result))
+	return result
+}
+
+// GetParams returns sorted request parameters.
+func (c *Cfg) GetParams(r *http.Request) []StrParam {
+	result := make([]StrParam, 0)
+	r.FormValue("test") // init form load
+	for k, v := range r.Form {
+		result = append(result, StrParam{k, strings.Join(v, "; ")})
+	}
+	sort.Sort(stringParams(result))
+	return result
 }

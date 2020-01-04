@@ -24,14 +24,12 @@ const (
 	// Name is a program name
 	Name = "IPINFO"
 	// Config is default configuration file name
-	Config = "config.json"
-	// interruptPrefix is constant prefix of interrupt signal
-	interruptPrefix = "interrupt signal"
-	timeout         = 30 * time.Second
+	Config  = "config.json"
+	timeout = 30 * time.Second
 )
 
 var (
-	// Version is LUSS version
+	// Version is program git version
 	Version = ""
 	// Revision is revision number
 	Revision = ""
@@ -44,6 +42,25 @@ var (
 	loggerInfo = log.New(os.Stdout, fmt.Sprintf("INFO [%v]: ", Name),
 		log.Ldate|log.Ltime|log.Lshortfile)
 )
+
+// IsError checks err error, writes its response and returns true if a problem was.
+func IsError(w http.ResponseWriter, err error) (int, bool) {
+	if err != nil {
+		loggerInfo.Println(err)
+		http.Error(w, "ERROR", http.StatusInternalServerError)
+		return http.StatusInternalServerError, true
+	}
+	return http.StatusOK, false
+}
+
+// WriteResult is fmt.Fprintf wrapper with error check.
+func WriteResult(err error, w http.ResponseWriter, format string, a ...interface{}) error {
+	if err != nil {
+		return err
+	}
+	_, err = fmt.Fprintf(w, format, a...)
+	return err
+}
 
 func main() {
 	defer func() {
@@ -81,7 +98,7 @@ func main() {
 	}
 	loggerInfo.Printf("\n%v\nlisten addr: %v\n", versionInfo, srv.Addr)
 	http.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
-		start, code := time.Now(), http.StatusOK
+		start, code, failed := time.Now(), http.StatusOK, false
 		defer func() {
 			loggerInfo.Printf("%-5v %v\t%-12v\t%v",
 				r.Method,
@@ -91,44 +108,51 @@ func main() {
 			)
 		}()
 		host, err := cfg.GetIP(r)
-		if err != nil {
-			loggerInfo.Println(err)
-			code = http.StatusInternalServerError
-			http.Error(w, "ERROR", code)
+		// main info
+		err = WriteResult(err, w, "IP: %v\nProto: %v\nMethod: %v\nURI: %v\n", host, r.Proto, r.Method, r.RequestURI)
+		err = WriteResult(err, w, "\nHeaders\n---------\n")
+		code, failed = IsError(w, err)
+		if failed {
 			return
 		}
-		// main info
-		fmt.Fprintf(w, "IP: %v\nProto: %v\nMethod: %v\nURI: %v\n",
-			host, r.Proto, r.Method, r.RequestURI)
-
-		fmt.Fprintln(w, "\nHeaders\n---------")
-		for k, v := range r.Header {
-			if !cfg.IsIgnoredHeader(k) {
-				fmt.Fprintf(w, "%v: %v\n", k, strings.Join(v, "; "))
-			}
+		// headers values
+		for _, h := range cfg.GetHeaders(r) {
+			err = WriteResult(err, w, "%v: %v\n", h.Name, h.Value)
 		}
-		// init form load
-		r.FormValue("test")
-		fmt.Fprintln(w, "\nParams\n---------")
-		for k, v := range r.Form {
-			fmt.Fprintf(w, "%v: %v\n", k, strings.Join(v, "; "))
+		err = WriteResult(err, w, "\nParams\n---------\n")
+		code, failed = IsError(w, err)
+		if failed {
+			return
+		}
+		for _, p := range cfg.GetParams(r) {
+			err = WriteResult(err, w, "%v: %v\n", p.Name, p.Value)
+		}
+		code, failed = IsError(w, err)
+		if failed {
+			return
 		}
 		// additional info
 		city, err := cfg.GetCity(host)
-		if err == nil {
-			fmt.Fprintln(w, "\nLocations\n---------")
-			isoCode := strings.ToLower(city.Country.IsoCode)
-			if _, ok := city.Country.Names[isoCode]; !ok {
-				isoCode = "en"
-			}
-			fmt.Fprintf(w, "Country: %v\n", city.Country.Names[isoCode])
-			fmt.Fprintf(w, "City: %v\n", city.City.Names[isoCode])
-			fmt.Fprintf(w, "Latitude: %v\n", city.Location.Latitude)
-			fmt.Fprintf(w, "Longitude: %v\n", city.Location.Longitude)
-			fmt.Fprintf(w, "TimeZone: %v\n", city.Location.TimeZone)
+		err = WriteResult(err, w, "\nLocations\n---------\n")
+		code, failed = IsError(w, err)
+		if failed {
+			return
+		}
+		isoCode := strings.ToLower(city.Country.IsoCode)
+		if _, ok := city.Country.Names[isoCode]; !ok {
+			isoCode = "en"
+		}
+		// WriteResult uses accumulated error
+		err = WriteResult(err, w, "Country: %v\n", city.Country.Names[isoCode])
+		err = WriteResult(err, w, "City: %v\n", city.City.Names[isoCode])
+		err = WriteResult(err, w, "Latitude: %v\n", city.Location.Latitude)
+		err = WriteResult(err, w, "Longitude: %v\n", city.Location.Longitude)
+		err = WriteResult(err, w, "TimeZone: %v\n", city.Location.TimeZone)
+		code, failed = IsError(w, err)
+		if failed {
+			return
 		}
 	})
-
 	idleConnsClosed := make(chan struct{})
 	go func() {
 		sigint := make(chan os.Signal, 1)
@@ -140,7 +164,6 @@ func main() {
 		}
 		close(idleConnsClosed)
 	}()
-
 	if err := srv.ListenAndServe(); err != http.ErrServerClosed {
 		loggerInfo.Printf("HTTP server ListenAndServe: %v", err)
 	}

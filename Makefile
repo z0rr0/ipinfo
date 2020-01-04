@@ -21,8 +21,6 @@ install:
 lint: install
 	go vet $(MAIN)
 	golint $(MAIN)
-	go vet $(MAIN)/db
-	golint $(MAIN)/db
 	go vet $(MAIN)/conf
 	golint $(MAIN)/conf
 

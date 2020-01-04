@@ -7,6 +7,7 @@ package conf
 
 import (
 	"net/http/httptest"
+	"strings"
 	"testing"
 )
 
@@ -55,10 +56,10 @@ func TestCfg_IsIgnoredHeader(t *testing.T) {
 	if l := len(cfg.IgnoreHeaders); l == 0 {
 		t.Error("empty ignore headers list")
 	}
-	if cfg.IsIgnoredHeader("bad_header") {
+	if cfg.ih["BAD_HEADER"] {
 		t.Error("expected false for bad header value")
 	}
-	if !cfg.IsIgnoredHeader(cfg.IgnoreHeaders[0]) {
+	if !cfg.ih[strings.ToUpper(cfg.IgnoreHeaders[0])] {
 		t.Error("expected true for valid header value")
 	}
 }
