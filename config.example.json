@@ -1,5 +1,5 @@
 {
-  "host": "",
+  "host": "127.0.0.1",
   "port": 8080,
   "db": "/tmp/mmd_storage/GeoLite2-City.mmdb",
   "ignore_headers": [

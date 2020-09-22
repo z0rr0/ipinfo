@@ -15,17 +15,17 @@ STDERR=/tmp/.$(PROJECTNAME)-stderr.txt
 
 all: test
 
-install:
-	go install -ldflags "$(VERSION)" $(MAIN)
+build:
+	go build -ldflags "$(VERSION)" .
 
-lint: install
+lint: build
 	go vet $(MAIN)
 	golint $(MAIN)
 	go vet $(MAIN)/conf
 	golint $(MAIN)/conf
 
 test: lint
-	@-cp $(GOPATH)/$(SOURCEDIR)/$(CONFIG) /tmp/
+	@-cp $(CONFIG) /tmp/
 	go test -race -v -cover -coverprofile=conf_coverage.out -trace conf_trace.out $(MAIN)/conf
 	# go tool cover -html=coverage.out
 	# go tool trace ratest.test trace.out
@@ -39,7 +39,7 @@ docker-no-cache: lint
 	bash $(CONTAINER)
 	docker build --no-cache -t $(DOCKER_TAG) .
 
-start: install
+start: build
 	@echo "  >  $(PROJECTNAME)"
 	@-$(BIN)/$(PROJECTNAME) -config config.example.json & echo $$! > $(PID)
 	@-cat $(PID)

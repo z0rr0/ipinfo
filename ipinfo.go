@@ -148,6 +148,7 @@ func main() {
 		err = WriteResult(err, w, "Latitude: %v\n", city.Location.Latitude)
 		err = WriteResult(err, w, "Longitude: %v\n", city.Location.Longitude)
 		err = WriteResult(err, w, "TimeZone: %v\n", city.Location.TimeZone)
+		err = WriteResult(err, w, "TimeUTC: %v\n", time.Now().UTC().Format(time.RFC3339))
 		code, failed = IsError(w, err)
 		if failed {
 			return

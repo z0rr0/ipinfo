@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-CONTAINER="golang:1.13-alpine"
+CONTAINER="golang:1.15-alpine"
 SOURCES="${GOPATH}/src"
 TARGET="${GOPATH}/bin/alpine"
 ATTRS="$(/bin/bash version.sh)"

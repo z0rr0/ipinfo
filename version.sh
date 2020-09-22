@@ -1,7 +1,5 @@
 #!/usr/bin/env bash
 
-cd "${GOPATH}"/src/github.com/z0rr0/ipinfo || exit 1
-
 GITCMD=$(command -v git)
 if [ -z "$GITCMD" ]; then
   echo "git command was not found"

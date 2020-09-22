@@ -1,9 +1,9 @@
 #!/usr/bin/env bash
-# Example srcript for for automatic update
+# Example script for automatic update
 # https://dev.maxmind.com/geoip/geoipupdate/
 #
 # Please check variables before usage:
-# CONTAINER - docker contrainer name
+# CONTAINER - docker container name
 # DB_TO - target database file
 # U - user
 
