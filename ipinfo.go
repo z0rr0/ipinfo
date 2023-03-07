@@ -14,7 +14,6 @@ import (
 	"os"
 	"os/signal"
 	"runtime"
-	"strings"
 	"syscall"
 	"time"
 
@@ -44,25 +43,6 @@ var (
 		log.Ldate|log.Ltime|log.Lshortfile)
 )
 
-// IsError checks err error, writes its response and returns true if a problem was.
-func IsError(w http.ResponseWriter, err error) (int, bool) {
-	if err != nil {
-		loggerInfo.Println(err)
-		http.Error(w, "ERROR", http.StatusInternalServerError)
-		return http.StatusInternalServerError, true
-	}
-	return http.StatusOK, false
-}
-
-// WriteResult is fmt.Fprintf wrapper with error check.
-func WriteResult(err error, w http.ResponseWriter, format string, a ...interface{}) error {
-	if err != nil {
-		return err
-	}
-	_, err = fmt.Fprintf(w, format, a...)
-	return err
-}
-
 func main() {
 	defer func() {
 		if r := recover(); r != nil {
@@ -73,8 +53,10 @@ func main() {
 	config := flag.String("config", Config, "configuration file")
 	flag.Parse()
 
-	versionInfo := fmt.Sprintf("\tVersion: %v\n\tRevision: %v\n\tBuild date: %v\n\tGo version: %v",
-		Version, Revision, BuildDate, GoVersion)
+	versionInfo := fmt.Sprintf(
+		"\tVersion: %v\n\tRevision: %v\n\tBuild date: %v\n\tGo version: %v",
+		Version, Revision, BuildDate, GoVersion,
+	)
 	if *version {
 		fmt.Println(versionInfo)
 		return
@@ -82,13 +64,9 @@ func main() {
 
 	cfg, err := conf.New(*config)
 	if err != nil {
-		panic(err)
+		loggerInfo.Fatal(err)
 	}
-	defer func() {
-		if err := cfg.Close(); err != nil {
-			loggerInfo.Printf("cfg close error: %v\n", err)
-		}
-	}()
+
 	srv := &http.Server{
 		Addr:           cfg.Addr(),
 		Handler:        http.DefaultServeMux,
@@ -98,8 +76,9 @@ func main() {
 		ErrorLog:       loggerInfo,
 	}
 	loggerInfo.Printf("\n%v\nlisten addr: %v\n", versionInfo, srv.Addr)
+
 	http.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
-		start, code, failed := time.Now(), http.StatusOK, false
+		start, code := time.Now(), http.StatusOK
 		defer func() {
 			loggerInfo.Printf("%-5v %v\t%-12v\t%v",
 				r.Method,
@@ -108,51 +87,10 @@ func main() {
 				r.RemoteAddr,
 			)
 		}()
-		host, reqErr := cfg.GetIP(r)
-		// main info
-		reqErr = WriteResult(reqErr, w, "IP: %v\nProto: %v\nMethod: %v\nURI: %v\n", host, r.Proto, r.Method, r.RequestURI)
-		reqErr = WriteResult(reqErr, w, "\nHeaders\n---------\n")
-		code, failed = IsError(w, reqErr)
-		if failed {
-			return
-		}
-		// headers values
-		for _, h := range cfg.GetHeaders(r) {
-			reqErr = WriteResult(reqErr, w, "%v: %v\n", h.Name, h.Value)
-		}
-		reqErr = WriteResult(reqErr, w, "\nParams\n---------\n")
-		code, failed = IsError(w, reqErr)
-		if failed {
-			return
-		}
-		for _, p := range cfg.GetParams(r) {
-			reqErr = WriteResult(reqErr, w, "%v: %v\n", p.Name, p.Value)
-		}
-		code, failed = IsError(w, reqErr)
-		if failed {
-			return
-		}
-		// additional info
-		city, reqErr := cfg.GetCity(host)
-		reqErr = WriteResult(reqErr, w, "\nLocations\n---------\n")
-		code, failed = IsError(w, reqErr)
-		if failed {
-			return
-		}
-		isoCode := strings.ToLower(city.Country.IsoCode)
-		if _, ok := city.Country.Names[isoCode]; !ok {
-			isoCode = "en"
-		}
-		// WriteResult uses accumulated error
-		reqErr = WriteResult(reqErr, w, "Country: %v\n", city.Country.Names[isoCode])
-		reqErr = WriteResult(reqErr, w, "City: %v\n", city.City.Names[isoCode])
-		reqErr = WriteResult(reqErr, w, "Latitude: %v\n", city.Location.Latitude)
-		reqErr = WriteResult(reqErr, w, "Longitude: %v\n", city.Location.Longitude)
-		reqErr = WriteResult(reqErr, w, "TimeZone: %v\n", city.Location.TimeZone)
-		reqErr = WriteResult(reqErr, w, "TimeUTC: %v\n", time.Now().UTC().Format(time.RFC3339))
-		code, failed = IsError(w, reqErr)
-		if failed {
-			return
+		if e := textHandler(w, r, cfg); e != nil {
+			loggerInfo.Println(e)
+			http.Error(w, "ERROR", http.StatusInternalServerError)
+			code = http.StatusInternalServerError
 		}
 	})
 	idleConnsClosed := make(chan struct{})
@@ -166,9 +104,15 @@ func main() {
 		}
 		close(idleConnsClosed)
 	}()
+
 	if err = srv.ListenAndServe(); err != http.ErrServerClosed {
 		loggerInfo.Printf("HTTP server ListenAndServe error: %v", err)
 	}
+
 	<-idleConnsClosed
+
+	if err = cfg.Close(); err != nil {
+		loggerInfo.Printf("cfg close error: %v\n", err)
+	}
 	loggerInfo.Println("stopped")
 }
