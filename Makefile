@@ -9,6 +9,8 @@ DOCKER_TAG=z0rr0/ipinfo
 
 CONFIG=config.example.json
 TEST_CONFIG=/tmp/ipinfo_test.json
+TEST_STORAGE=/tmp/GeoLite2-City.mmdb
+URL_STORAGE=https://static.fwtf.xyz/other/GeoLite2-City.mmdb
 
 PID=/tmp/.$(TARGET).pid
 STDERR=/tmp/.$(TARGET)-stderr.txt
@@ -32,6 +34,7 @@ lint: check_fmt
 
 prepare:
 	@-cp -f $(CONFIG) $(TEST_CONFIG)
+	@test -f $(TEST_STORAGE) || curl -o $(TEST_STORAGE) $(URL_STORAGE)
 
 test: lint prepare
 	# go test -v -race -cover -coverprofile=coverage.out -trace trace.out github.com/z0rr0/ipinfo
