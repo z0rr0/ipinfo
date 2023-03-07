@@ -1,4 +1,4 @@
-// Copyright 2020 Alexander Zaytsev <thebestzorro@yandex.ru>.
+// Copyright 2023 Aleksandr Zaitsev <me@axv.email>.
 // All rights reserved. Use of this source code is governed
 // by a BSD-style license that can be found in the LICENSE file.
 
@@ -8,7 +8,6 @@ package conf
 import (
 	"encoding/json"
 	"fmt"
-	"io/ioutil"
 	"net"
 	"net/http"
 	"os"
@@ -16,21 +15,21 @@ import (
 	"sort"
 	"strings"
 
-	"github.com/hashicorp/golang-lru"
+	lru "github.com/hashicorp/golang-lru/v2"
 	"github.com/oschwald/geoip2-golang"
 )
 
 // Cfg is configuration settings struct.
 type Cfg struct {
-	Host          string          `json:"host"`
-	Port          uint            `json:"port"`
-	Db            string          `json:"db"`
-	IgnoreHeaders []string        `json:"ignore_headers"`
-	IPHeader      string          `json:"ip_header"`
-	CacheSize     int             `json:"cache_size"`
-	ih            map[string]bool // ignored header map
-	storage       *geoip2.Reader
-	cache         *lru.Cache
+	Host           string              `json:"host"`
+	Port           uint                `json:"port"`
+	Db             string              `json:"db"`
+	IgnoreHeaders  []string            `json:"ignore_headers"`
+	IPHeader       string              `json:"ip_header"`
+	CacheSize      int                 `json:"cache_size"`
+	ignoredHeaders map[string]struct{} // ignored header map
+	storage        *geoip2.Reader
+	cache          *lru.Cache[string, *geoip2.City]
 }
 
 // StrParam is common struct for headers and form params.
@@ -38,12 +37,6 @@ type StrParam struct {
 	Name  string
 	Value string
 }
-
-type stringParams []StrParam
-
-func (a stringParams) Len() int           { return len(a) }
-func (a stringParams) Swap(i, j int)      { a[i], a[j] = a[j], a[i] }
-func (a stringParams) Less(i, j int) bool { return a[i].Name < a[j].Name }
 
 // Addr returns service's net address.
 func (c *Cfg) Addr() string {
@@ -68,8 +61,8 @@ func (c *Cfg) GetIP(r *http.Request) (string, error) {
 // GetCity returns city info found by IP address.
 func (c *Cfg) GetCity(host string) (*geoip2.City, error) {
 	if c.cache != nil {
-		if v, ok := c.cache.Get(host); ok {
-			return v.(*geoip2.City), nil
+		if city, ok := c.cache.Get(host); ok {
+			return city, nil
 		}
 	}
 	ip := net.ParseIP(host)
@@ -97,36 +90,43 @@ func New(filename string) (*Cfg, error) {
 	if err != nil {
 		return nil, err
 	}
+
 	_, err = os.Stat(fullPath)
 	if err != nil {
 		return nil, err
 	}
-	jsonData, err := ioutil.ReadFile(fullPath)
+
+	jsonData, err := os.ReadFile(fullPath)
 	if err != nil {
 		return nil, err
 	}
+
 	c := &Cfg{}
 	err = json.Unmarshal(jsonData, c)
 	if err != nil {
 		return nil, err
 	}
-	c.ih = make(map[string]bool)
+
+	c.ignoredHeaders = make(map[string]struct{})
 	for _, h := range c.IgnoreHeaders {
-		c.ih[strings.ToUpper(h)] = true
+		c.ignoredHeaders[strings.ToUpper(h)] = struct{}{}
 	}
+
 	// db storage
 	storage, err := geoip2.Open(c.Db)
 	if err != nil {
 		return nil, err
 	}
 	c.storage = storage
+
 	if c.CacheSize > 0 {
-		cache, err := lru.New(c.CacheSize)
+		cache, err := lru.New[string, *geoip2.City](c.CacheSize)
 		if err != nil {
 			return nil, err
 		}
 		c.cache = cache
 	}
+
 	return c, nil
 }
 
@@ -134,12 +134,14 @@ func New(filename string) (*Cfg, error) {
 func (c *Cfg) GetHeaders(r *http.Request) []StrParam {
 	result := make([]StrParam, 0, len(r.Header))
 	for k, v := range r.Header {
-		if !c.ih[strings.ToUpper(k)] {
+		if _, ok := c.ignoredHeaders[strings.ToUpper(k)]; !ok {
 			// header is not ignored
 			result = append(result, StrParam{k, strings.Join(v, "; ")})
 		}
 	}
-	sort.Sort(stringParams(result))
+	sort.Slice(result, func(i, j int) bool {
+		return result[i].Name < result[j].Name
+	})
 	return result
 }
 
@@ -150,6 +152,8 @@ func (c *Cfg) GetParams(r *http.Request) []StrParam {
 	for k, v := range r.Form {
 		result = append(result, StrParam{k, strings.Join(v, "; ")})
 	}
-	sort.Sort(stringParams(result))
+	sort.Slice(result, func(i, j int) bool {
+		return result[i].Name < result[j].Name
+	})
 	return result
 }

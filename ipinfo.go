@@ -1,4 +1,4 @@
-// Copyright 2020 Alexander Zaytsev <thebestzorro@yandex.ru>.
+// Copyright 2023 Aleksandr Zaitsev <me@axv.email>.
 // All rights reserved. Use of this source code is governed
 // by a BSD-style license that can be found in the LICENSE file.
 
@@ -15,6 +15,7 @@ import (
 	"os/signal"
 	"runtime"
 	"strings"
+	"syscall"
 	"time"
 
 	"github.com/z0rr0/ipinfo/conf"
@@ -107,34 +108,34 @@ func main() {
 				r.RemoteAddr,
 			)
 		}()
-		host, err := cfg.GetIP(r)
+		host, reqErr := cfg.GetIP(r)
 		// main info
-		err = WriteResult(err, w, "IP: %v\nProto: %v\nMethod: %v\nURI: %v\n", host, r.Proto, r.Method, r.RequestURI)
-		err = WriteResult(err, w, "\nHeaders\n---------\n")
-		code, failed = IsError(w, err)
+		reqErr = WriteResult(reqErr, w, "IP: %v\nProto: %v\nMethod: %v\nURI: %v\n", host, r.Proto, r.Method, r.RequestURI)
+		reqErr = WriteResult(reqErr, w, "\nHeaders\n---------\n")
+		code, failed = IsError(w, reqErr)
 		if failed {
 			return
 		}
 		// headers values
 		for _, h := range cfg.GetHeaders(r) {
-			err = WriteResult(err, w, "%v: %v\n", h.Name, h.Value)
+			reqErr = WriteResult(reqErr, w, "%v: %v\n", h.Name, h.Value)
 		}
-		err = WriteResult(err, w, "\nParams\n---------\n")
-		code, failed = IsError(w, err)
+		reqErr = WriteResult(reqErr, w, "\nParams\n---------\n")
+		code, failed = IsError(w, reqErr)
 		if failed {
 			return
 		}
 		for _, p := range cfg.GetParams(r) {
-			err = WriteResult(err, w, "%v: %v\n", p.Name, p.Value)
+			reqErr = WriteResult(reqErr, w, "%v: %v\n", p.Name, p.Value)
 		}
-		code, failed = IsError(w, err)
+		code, failed = IsError(w, reqErr)
 		if failed {
 			return
 		}
 		// additional info
-		city, err := cfg.GetCity(host)
-		err = WriteResult(err, w, "\nLocations\n---------\n")
-		code, failed = IsError(w, err)
+		city, reqErr := cfg.GetCity(host)
+		reqErr = WriteResult(reqErr, w, "\nLocations\n---------\n")
+		code, failed = IsError(w, reqErr)
 		if failed {
 			return
 		}
@@ -143,13 +144,13 @@ func main() {
 			isoCode = "en"
 		}
 		// WriteResult uses accumulated error
-		err = WriteResult(err, w, "Country: %v\n", city.Country.Names[isoCode])
-		err = WriteResult(err, w, "City: %v\n", city.City.Names[isoCode])
-		err = WriteResult(err, w, "Latitude: %v\n", city.Location.Latitude)
-		err = WriteResult(err, w, "Longitude: %v\n", city.Location.Longitude)
-		err = WriteResult(err, w, "TimeZone: %v\n", city.Location.TimeZone)
-		err = WriteResult(err, w, "TimeUTC: %v\n", time.Now().UTC().Format(time.RFC3339))
-		code, failed = IsError(w, err)
+		reqErr = WriteResult(reqErr, w, "Country: %v\n", city.Country.Names[isoCode])
+		reqErr = WriteResult(reqErr, w, "City: %v\n", city.City.Names[isoCode])
+		reqErr = WriteResult(reqErr, w, "Latitude: %v\n", city.Location.Latitude)
+		reqErr = WriteResult(reqErr, w, "Longitude: %v\n", city.Location.Longitude)
+		reqErr = WriteResult(reqErr, w, "TimeZone: %v\n", city.Location.TimeZone)
+		reqErr = WriteResult(reqErr, w, "TimeUTC: %v\n", time.Now().UTC().Format(time.RFC3339))
+		code, failed = IsError(w, reqErr)
 		if failed {
 			return
 		}
@@ -157,16 +158,16 @@ func main() {
 	idleConnsClosed := make(chan struct{})
 	go func() {
 		sigint := make(chan os.Signal, 1)
-		signal.Notify(sigint, os.Interrupt)
+		signal.Notify(sigint, os.Interrupt, os.Signal(syscall.SIGTERM), os.Signal(syscall.SIGQUIT))
 		<-sigint
 
-		if err := srv.Shutdown(context.Background()); err != nil {
-			loggerInfo.Printf("HTTP server Shutdown: %v", err)
+		if e := srv.Shutdown(context.Background()); e != nil {
+			loggerInfo.Printf("HTTP server shutdown error: %v", e)
 		}
 		close(idleConnsClosed)
 	}()
-	if err := srv.ListenAndServe(); err != http.ErrServerClosed {
-		loggerInfo.Printf("HTTP server ListenAndServe: %v", err)
+	if err = srv.ListenAndServe(); err != http.ErrServerClosed {
+		loggerInfo.Printf("HTTP server ListenAndServe error: %v", err)
 	}
 	<-idleConnsClosed
 	loggerInfo.Println("stopped")

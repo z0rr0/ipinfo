@@ -12,7 +12,7 @@ import (
 )
 
 const (
-	testConfigName = "/tmp/config.example.json"
+	testConfigName = "/tmp/ipinfo_test.json"
 )
 
 func TestNew(t *testing.T) {
@@ -56,10 +56,10 @@ func TestCfg_IsIgnoredHeader(t *testing.T) {
 	if l := len(cfg.IgnoreHeaders); l == 0 {
 		t.Error("empty ignore headers list")
 	}
-	if cfg.ih["BAD_HEADER"] {
+	if _, ok := cfg.ignoredHeaders["BAD_HEADER"]; ok {
 		t.Error("expected false for bad header value")
 	}
-	if !cfg.ih[strings.ToUpper(cfg.IgnoreHeaders[0])] {
+	if _, ok := cfg.ignoredHeaders[strings.ToUpper(cfg.IgnoreHeaders[0])]; !ok {
 		t.Error("expected true for valid header value")
 	}
 }
@@ -70,7 +70,7 @@ func TestCfg_GetIP(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	req := httptest.NewRequest("GET", "http://example.com/foo", nil)
+	req := httptest.NewRequest("GET", "https://example.com/foo", nil)
 	_, err = cfg.GetIP(req)
 	if err == nil {
 		t.Error("expected 'not real ip header' error")

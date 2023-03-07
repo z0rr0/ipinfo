@@ -1,47 +1,52 @@
-PROJECTNAME=$(shell basename "$(PWD)")
+TARGET=ipinfo
+TS=$(shell date -u +"%F_%T")
+TAG=$(shell git tag | sort -V | tail -1)
+COMMIT=$(shell git log --oneline | head -1)
+VERSION=$(firstword $(COMMIT))
 
-BIN=$(GOPATH)/bin
-VERSION=`bash version.sh`
-MAIN=github.com/z0rr0/ipinfo
-SOURCEDIR=src/$(MAIN)
-CONTAINER=container_build.sh
+LDFLAGS=-X main.Version=$(TAG) -X main.Revision=git:$(VERSION) -X main.BuildDate=$(TS)
 DOCKER_TAG=z0rr0/ipinfo
+
 CONFIG=config.example.json
+TEST_CONFIG=/tmp/ipinfo_test.json
 
-PID=/tmp/.$(PROJECTNAME).pid
-STDERR=/tmp/.$(PROJECTNAME)-stderr.txt
-
-# MAKEFLAGS += --silent
+PID=/tmp/.$(TARGET).pid
+STDERR=/tmp/.$(TARGET)-stderr.txt
 
 all: test
 
-build:
-	go build -ldflags "$(VERSION)" .
+build: lint
+	go build -o $(PWD)/$(TARGET) -ldflags "$(LDFLAGS)"
 
-lint: build
-	go vet $(MAIN)
-	golint $(MAIN)
-	go vet $(MAIN)/conf
-	golint $(MAIN)/conf
+fmt:
+	gofmt -d .
 
-test: lint
-	@-cp $(CONFIG) /tmp/
-	go test -race -v -cover -coverprofile=conf_coverage.out -trace conf_trace.out $(MAIN)/conf
-	# go tool cover -html=coverage.out
-	# go tool trace ratest.test trace.out
-	# go test -race -v -cover -coverprofile=coverage.out -trace trace.out $(MAIN)
+check_fmt:
+	@test -z "`gofmt -l .`" || { echo "ERROR: failed gofmt, for more details run - make fmt"; false; }
+	@-echo "gofmt successful"
 
-docker: lint
-	bash $(CONTAINER)
-	docker build -t $(DOCKER_TAG) .
+lint: check_fmt
+	go vet $(PWD)/...
+	#golint -set_exit_status $(PWD)/...
+	#golangci-lint run $(PWD)/...
 
-docker-no-cache: lint
-	bash $(CONTAINER)
-	docker build --no-cache -t $(DOCKER_TAG) .
+prepare:
+	@-cp -f $(CONFIG) $(TEST_CONFIG)
+
+test: lint prepare
+	# go test -v -race -cover -coverprofile=coverage.out -trace trace.out github.com/z0rr0/ipinfo
+	go test -race -cover $(PWD)/...
+
+docker: lint clean
+	docker build --build-arg LDFLAGS="$(LDFLAGS)" -t $(DOCKER_TAG) .
+
+clean:
+	rm -f $(PWD)/$(TARGET)
+	find ./ -type f -name "*.out" -delete
 
 start: build
-	@echo "  >  $(PROJECTNAME)"
-	@-$(BIN)/$(PROJECTNAME) -config config.example.json & echo $$! > $(PID)
+	@echo "  >  $(TARGET)"
+	@-$(PWD)/$(TARGET) -config $(CONFIG) & echo $$! > $(PID)
 	@-cat $(PID)
 
 stop:
@@ -51,13 +56,3 @@ stop:
 	@-rm $(PID)
 
 restart: stop start
-
-arm:
-	env GOOS=linux GOARCH=arm go install -ldflags "$(VERSION)" $(MAIN)
-
-linux:
-	env GOOS=linux GOARCH=amd64 go install -ldflags "$(VERSION)" $(MAIN)
-
-clean: stop
-	rm -rf $(BIN)/*
-	find $(GOPATH)/$(SOURCEDIR)/ -type f -name "*.out" -print0 -delete
