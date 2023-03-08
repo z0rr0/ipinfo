@@ -7,6 +7,7 @@ package conf
 
 import (
 	"encoding/json"
+	"errors"
 	"fmt"
 	"net"
 	"net/http"
@@ -55,7 +56,7 @@ func (c *Cfg) GetIP(r *http.Request) (string, error) {
 	if values, ok := r.Header[c.IPHeader]; ok {
 		return values[0], nil
 	}
-	return "", fmt.Errorf("not real ip header")
+	return "", errors.New("no real ip header")
 }
 
 // GetCity returns city info found by IP address.

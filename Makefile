@@ -38,6 +38,7 @@ prepare:
 
 test: lint prepare
 	# go test -v -race -cover -coverprofile=coverage.out -trace trace.out github.com/z0rr0/ipinfo
+	# go tool cover -html=coverage.out
 	go test -race -cover $(PWD)/...
 
 docker: lint clean

@@ -2,6 +2,7 @@ package main
 
 import (
 	"fmt"
+	"io"
 	"net/http"
 	"strings"
 	"time"
@@ -10,7 +11,7 @@ import (
 )
 
 // printF is fmt.Fprintf wrapper with error check.
-func printF(err error, w http.ResponseWriter, format string, a ...interface{}) error {
+func printF(err error, w io.Writer, format string, a ...interface{}) error {
 	if err != nil {
 		return err
 	}
@@ -18,7 +19,7 @@ func printF(err error, w http.ResponseWriter, format string, a ...interface{}) e
 	return err
 }
 
-func sectionHeadersAndParams(err error, w http.ResponseWriter, r *http.Request, cfg *conf.Cfg) error {
+func sectionHeadersAndParams(err error, w io.Writer, r *http.Request, cfg *conf.Cfg) error {
 	if err != nil {
 		return err
 	}
@@ -34,7 +35,7 @@ func sectionHeadersAndParams(err error, w http.ResponseWriter, r *http.Request, 
 	return err
 }
 
-func sectionLocation(err error, host string, w http.ResponseWriter, r *http.Request, cfg *conf.Cfg) error {
+func sectionLocation(err error, host string, w io.Writer, r *http.Request, cfg *conf.Cfg) error {
 	if err != nil {
 		return err
 	}
