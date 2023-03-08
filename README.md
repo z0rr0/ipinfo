@@ -10,15 +10,20 @@ IP info web service.
 
 ```bash
 make build
+# cp config.example.json ipinfo.json
+# update ipinfo.json
+./ipinfo -config ipinfo.json
 ```
 
-For docker container
+For docker container `z0rr0/ipinfo:latest`
 
 ```bash
-make docker 
+make docker
+# or only for linux
+# make docker_linux_amd64
 ```
 
-### Run
+### Local run
 
 ```bash
 # start
@@ -29,10 +34,6 @@ make stop
 
 # restart
 make restart
-
-# run with custom config
-chmod u+x ipinfo
-./ipinfo -config ipinfo.json
 ```
 
 For docker container

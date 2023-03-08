@@ -44,6 +44,9 @@ test: lint prepare
 docker: lint clean
 	docker build --build-arg LDFLAGS="$(LDFLAGS)" -t $(DOCKER_TAG) .
 
+docker_linux_amd64: lint clean
+	docker buildx build --platform linux/amd64 --build-arg LDFLAGS="$(LDFLAGS)" -t $(DOCKER_TAG) .
+
 clean:
 	rm -f $(PWD)/$(TARGET)
 	find ./ -type f -name "*.out" -delete
