@@ -19,20 +19,17 @@ For docker container `z0rr0/ipinfo:latest`
 
 ```bash
 make docker
-# or only for linux
+# or only for linux amd64
 # make docker_linux_amd64
 ```
 
 ### Local run
 
 ```bash
-# start
 make start
-
-# stop
 make stop
 
-# restart
+# or alias for [stop + start]
 make restart
 ```
 
