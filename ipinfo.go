@@ -14,10 +14,12 @@ import (
 	"os"
 	"os/signal"
 	"runtime"
+	"strings"
 	"syscall"
 	"time"
 
 	"github.com/z0rr0/ipinfo/conf"
+	"github.com/z0rr0/ipinfo/handle"
 )
 
 const (
@@ -78,6 +80,7 @@ func main() {
 	loggerInfo.Printf("\n%v\nlisten addr: %v\n", versionInfo, srv.Addr)
 
 	http.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
+		var handler func(w http.ResponseWriter, r *http.Request, cfg *conf.Cfg) error
 		start, code := time.Now(), http.StatusOK
 		defer func() {
 			loggerInfo.Printf("%-5v %v\t%-12v\t%v",
@@ -87,7 +90,16 @@ func main() {
 				r.RemoteAddr,
 			)
 		}()
-		if e := textHandler(w, r, cfg); e != nil {
+
+		switch strings.TrimRight(r.URL.Path, "/ ") {
+		case "/short":
+			handler = handle.TextShortHandler
+		case "/json":
+			handler = handle.JSONHandler
+		default:
+			handler = handle.TextHandler
+		}
+		if e := handler(w, r, cfg); e != nil {
 			loggerInfo.Println(e)
 			http.Error(w, "ERROR", http.StatusInternalServerError)
 			code = http.StatusInternalServerError
