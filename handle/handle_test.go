@@ -2,6 +2,7 @@ package handle
 
 import (
 	"encoding/json"
+	"encoding/xml"
 	"io"
 	"net/http"
 	"net/http/httptest"
@@ -22,8 +23,13 @@ func TestJSONHandler(t *testing.T) {
 	req := httptest.NewRequest("GET", "http://example.com/foo", nil)
 	req.Header.Add("X-Real-Ip", "193.138.218.226")
 
+	info, err := cfg.Info(req)
+	if err != nil {
+		t.Fatal(err)
+	}
+
 	w := httptest.NewRecorder()
-	err = JSONHandler(w, req, cfg)
+	err = JSONHandler(w, info)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -37,22 +43,79 @@ func TestJSONHandler(t *testing.T) {
 		t.Errorf("not equal Content-Type: %v", ct)
 	}
 
-	info := &JSONInfo{}
-	err = json.NewDecoder(resp.Body).Decode(info)
+	responseInfo := &conf.IPInfo{}
+	err = json.NewDecoder(resp.Body).Decode(responseInfo)
 	if err != nil {
 		t.Fatal(err)
 	}
 
-	expected := &JSONInfo{
+	expected := &conf.IPInfo{
 		IP:        "193.138.218.226",
 		Country:   "Sweden",
 		City:      "Malmo",
 		Longitude: 12.9982,
 		Latitude:  55.6078,
+		TimeZone:  "Europe/Stockholm",
 		UTCTime:   info.UTCTime, // don't check time
 	}
-	if *info != *expected {
+	if *responseInfo != *expected {
 		t.Errorf("not equal JSONInfo: %v", info)
+	}
+
+	if err = resp.Body.Close(); err != nil {
+		t.Error(err)
+	}
+}
+
+func TestXMLHandler(t *testing.T) {
+	cfg, err := conf.New(testConfigName)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	req := httptest.NewRequest("GET", "http://example.com/foo", nil)
+	req.Header.Add("X-Real-Ip", "193.138.218.226")
+
+	info, err := cfg.Info(req)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	w := httptest.NewRecorder()
+	err = XMLHandler(w, info)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	resp := w.Result()
+	if resp.StatusCode != http.StatusOK {
+		t.Errorf("not %d status code: %v", http.StatusOK, resp.StatusCode)
+	}
+
+	if ct := resp.Header.Get("Content-Type"); ct != "application/xml; charset=utf-8" {
+		t.Errorf("not equal Content-Type: %v", ct)
+	}
+
+	responseInfo := &XMLInfo{}
+	err = xml.NewDecoder(resp.Body).Decode(responseInfo)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	expected := &XMLInfo{
+		XMLName: responseInfo.XMLName, // don't check name
+		IPInfo: conf.IPInfo{
+			IP:        "193.138.218.226",
+			Country:   "Sweden",
+			City:      "Malmo",
+			Longitude: 12.9982,
+			Latitude:  55.6078,
+			TimeZone:  "Europe/Stockholm",
+			UTCTime:   responseInfo.UTCTime, // don't check time
+		},
+	}
+	if *responseInfo != *expected {
+		t.Errorf("not equal XMLInfo: %v", responseInfo)
 	}
 
 	if err = resp.Body.Close(); err != nil {
@@ -69,8 +132,13 @@ func TestTextShortHandler(t *testing.T) {
 	req := httptest.NewRequest("GET", "http://example.com/foo", nil)
 	req.Header.Add("X-Real-Ip", "193.138.218.226")
 
+	info, err := cfg.Info(req)
+	if err != nil {
+		t.Fatal(err)
+	}
+
 	w := httptest.NewRecorder()
-	err = TextShortHandler(w, req, cfg)
+	err = TextShortHandler(w, info)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -111,8 +179,13 @@ func TestTextHandler(t *testing.T) {
 	req.Header.Add("X-Real-Ip", "193.138.218.226")
 	req.Header.Add("X-Header-A", "a")
 
+	info, err := cfg.Info(req)
+	if err != nil {
+		t.Fatal(err)
+	}
+
 	w := httptest.NewRecorder()
-	err = TextHandler(w, req, cfg)
+	err = TextHandler(w, req, cfg, info)
 	if err != nil {
 		t.Fatal(err)
 	}

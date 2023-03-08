@@ -15,10 +15,13 @@ import (
 	"path/filepath"
 	"sort"
 	"strings"
+	"time"
 
 	lru "github.com/hashicorp/golang-lru/v2"
 	"github.com/oschwald/geoip2-golang"
 )
+
+const defaultISOCode = "en"
 
 // Cfg is configuration settings struct.
 type Cfg struct {
@@ -37,6 +40,46 @@ type Cfg struct {
 type StrParam struct {
 	Name  string
 	Value string
+}
+
+// IPInfo is IP and related info for response.
+type IPInfo struct {
+	IP        string  `xml:"ip" json:"ip"`
+	Country   string  `xml:"country" json:"country"`
+	City      string  `xml:"city" json:"city"`
+	Longitude float64 `xml:"longitude" json:"longitude"`
+	Latitude  float64 `xml:"latitude" json:"latitude"`
+	UTCTime   string  `xml:"utc_time" json:"utc_time"`
+	TimeZone  string  `xml:"time_zone" json:"time_zone"`
+}
+
+// Info returns base info about request.
+func (c *Cfg) Info(r *http.Request) (*IPInfo, error) {
+	host, err := c.GetIP(r)
+	if err != nil {
+		return nil, err
+	}
+
+	city, err := c.GetCity(host)
+	if err != nil {
+		return nil, err
+	}
+
+	isoCode := strings.ToLower(city.Country.IsoCode)
+	if _, ok := city.Country.Names[isoCode]; !ok {
+		isoCode = defaultISOCode
+	}
+
+	info := IPInfo{
+		IP:        host,
+		Country:   city.Country.Names[isoCode],
+		City:      city.City.Names[isoCode],
+		Longitude: city.Location.Longitude,
+		Latitude:  city.Location.Latitude,
+		UTCTime:   time.Now().UTC().Format(time.RFC3339),
+		TimeZone:  city.Location.TimeZone,
+	}
+	return &info, nil
 }
 
 // Addr returns service's net address.

@@ -183,3 +183,32 @@ func TestCfg_GetParams(t *testing.T) {
 		}
 	}
 }
+
+func TestCfg_Info(t *testing.T) {
+	cfg, err := New(testConfigName)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	req := httptest.NewRequest("GET", "https://example.com/foo", nil)
+	req.Header.Add("X-Real-Ip", "193.138.218.226")
+
+	info, err := cfg.Info(req)
+	if err != nil {
+		t.Fatalf("info error: %v", err)
+	}
+
+	expected := IPInfo{
+		IP:        "193.138.218.226",
+		Country:   "Sweden",
+		City:      "Malmo",
+		Longitude: 12.9982,
+		Latitude:  55.6078,
+		TimeZone:  "Europe/Stockholm",
+		UTCTime:   info.UTCTime, // don't check time
+	}
+
+	if i := *info; i != expected {
+		t.Errorf("not equal %v != %v", i, expected)
+	}
+}

@@ -4,8 +4,6 @@ import (
 	"fmt"
 	"io"
 	"net/http"
-	"strings"
-	"time"
 
 	"github.com/z0rr0/ipinfo/conf"
 )
@@ -35,46 +33,20 @@ func sectionHeadersAndParams(err error, w io.Writer, r *http.Request, cfg *conf.
 	return err
 }
 
-func sectionLocation(err error, host string, w io.Writer, cfg *conf.Cfg) error {
+func sectionLocation(err error, w io.Writer, info *conf.IPInfo) error {
 	if err != nil {
 		return err
 	}
 
-	city, err := cfg.GetCity(host)
 	err = printF(err, w, "\nLocations\n---------\n")
 	if err != nil {
 		return err
 	}
 
-	isoCode := strings.ToLower(city.Country.IsoCode)
-	if _, ok := city.Country.Names[isoCode]; !ok {
-		isoCode = defaultISOCode
-	}
-
-	err = printF(err, w, "Country: %v\n", city.Country.Names[isoCode])
-	err = printF(err, w, "City: %v\n", city.City.Names[isoCode])
-	err = printF(err, w, "Latitude: %v\n", city.Location.Latitude)
-	err = printF(err, w, "Longitude: %v\n", city.Location.Longitude)
-	err = printF(err, w, "TimeZone: %v\n", city.Location.TimeZone)
-	return printF(err, w, "TimeUTC: %v\n", time.Now().UTC().Format(time.RFC3339))
-}
-
-func sectionShortLocation(err error, host string, w io.Writer, cfg *conf.Cfg) error {
-	if err != nil {
-		return err
-	}
-
-	city, err := cfg.GetCity(host)
-	if err != nil {
-		return err
-	}
-
-	isoCode := strings.ToLower(city.Country.IsoCode)
-	if _, ok := city.Country.Names[isoCode]; !ok {
-		isoCode = defaultISOCode
-	}
-
-	err = printF(err, w, "Country: %v\n", city.Country.Names[isoCode])
-	err = printF(err, w, "City:    %v\n", city.City.Names[isoCode])
-	return printF(err, w, "TimeUTC: %v\n", time.Now().UTC().Format(time.RFC3339))
+	err = printF(err, w, "Country: %v\n", info.Country)
+	err = printF(err, w, "City: %v\n", info.City)
+	err = printF(err, w, "Latitude: %v\n", info.Latitude)
+	err = printF(err, w, "Longitude: %v\n", info.Longitude)
+	err = printF(err, w, "TimeZone: %v\n", info.TimeZone)
+	return printF(err, w, "TimeUTC: %v\n", info.UTCTime)
 }

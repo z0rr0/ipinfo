@@ -79,27 +79,34 @@ func main() {
 	}
 	loggerInfo.Printf("\n%v\nlisten addr: %v\n", versionInfo, srv.Addr)
 
+	handlers := map[string]func(http.ResponseWriter, *conf.IPInfo) error{
+		"/short": handle.TextShortHandler,
+		"/json":  handle.JSONHandler,
+		"/xml":   handle.XMLHandler,
+	}
+
 	http.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
-		var handler func(w http.ResponseWriter, r *http.Request, cfg *conf.Cfg) error
 		start, code := time.Now(), http.StatusOK
 		defer func() {
 			loggerInfo.Printf("%-5v %v\t%-12v\t%v",
-				r.Method,
-				code,
-				time.Since(start),
-				r.RemoteAddr,
+				r.Method, code, time.Since(start), r.RemoteAddr,
 			)
 		}()
 
-		switch strings.TrimRight(r.URL.Path, "/ ") {
-		case "/short":
-			handler = handle.TextShortHandler
-		case "/json":
-			handler = handle.JSONHandler
-		default:
-			handler = handle.TextHandler
+		info, e := cfg.Info(r)
+		if e != nil {
+			loggerInfo.Println(e)
+			http.Error(w, "ERROR", http.StatusInternalServerError)
 		}
-		if e := handler(w, r, cfg); e != nil {
+
+		url := strings.TrimRight(r.URL.Path, "/ ")
+		if h, ok := handlers[url]; ok {
+			e = h(w, info)
+		} else {
+			e = handle.TextHandler(w, r, cfg, info)
+		}
+
+		if e != nil {
 			loggerInfo.Println(e)
 			http.Error(w, "ERROR", http.StatusInternalServerError)
 			code = http.StatusInternalServerError
