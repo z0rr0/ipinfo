@@ -133,13 +133,12 @@ func TestTextHandler(t *testing.T) {
 	strBody := string(body)
 	subStr := "IP: 193.138.218.226\nProto: HTTP/1.1\nMethod: GET"
 
-	i := strings.Index(strBody, subStr)
-	if i < 0 {
+	if !strings.Contains(strBody, subStr) {
 		t.Fatalf("not found required first sub-string: %v", strBody)
 	}
 
 	subStr = "Locations\n---------\nCountry: Sweden\nCity: Malmo\nLatitude: 55.6078\nLongitude: 12.9982\nTimeZone:"
-	if i = strings.Index(strBody, subStr); i < 0 {
+	if !strings.Contains(strBody, subStr) {
 		t.Fatalf("not found required second sub-string: %v", strBody)
 	}
 }
