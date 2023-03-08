@@ -2,7 +2,6 @@ ARG GOLANG_VERSION="1.20.2"
 
 FROM golang:${GOLANG_VERSION}-alpine as builder
 ARG LDFLAGS
-RUN apk --no-cache add ca-certificates tzdata git sqlite gcc libc-dev
 WORKDIR /go/src/github.com/z0rr0/ipinfo
 COPY . .
 RUN echo "LDFLAGS = $LDFLAGS"
