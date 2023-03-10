@@ -4,18 +4,25 @@
 ![Version](https://img.shields.io/github/tag/z0rr0/ipinfo.svg)
 ![License](https://img.shields.io/github/license/z0rr0/ipinfo.svg)
 
-IP info web service.
+IP info web service. It handles 4 requests:
+
+1. default - plain text info about request IP
+2. `/short` - short info about request IP
+3. `/json` - json info about request IP
+4. `/xml` - json info about request IP
+
+![example](example.png)
 
 ### Build
 
 ```bash
 make build
 # cp config.example.json ipinfo.json
-# update ipinfo.json
+# set custom settings in ipinfo.json
 ./ipinfo -config ipinfo.json
 ```
 
-For docker container `z0rr0/ipinfo:latest`
+For docker container [z0rr0/ipinfo](https://hub.docker.com/r/z0rr0/ipinfo)
 
 ```bash
 make docker
@@ -29,7 +36,7 @@ make docker
 make start
 make stop
 
-# or alias for [stop + start]
+# alias for [stop + start]
 make restart
 ```
 
