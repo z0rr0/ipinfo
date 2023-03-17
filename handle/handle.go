@@ -1,12 +1,20 @@
 package handle
 
 import (
+	_ "embed"
 	"encoding/json"
 	"encoding/xml"
 	"fmt"
+	"html/template"
 	"net/http"
 
 	"github.com/z0rr0/ipinfo/conf"
+)
+
+var (
+	//go:embed index.html
+	htmlIndex    string
+	htmlTemplate = template.Must(template.New("index").Parse(htmlIndex))
 )
 
 // XMLInfo is a struct for application/xml response data.
@@ -52,4 +60,10 @@ func XMLHandler(w http.ResponseWriter, info *conf.IPInfo) error {
 		return fmt.Errorf("XMLHandler: %w", err)
 	}
 	return xml.NewEncoder(w).Encode(&XMLInfo{IPInfo: *info})
+}
+
+// HTMLHandler is handler for text/html response.
+func HTMLHandler(w http.ResponseWriter, info *conf.IPInfo) error {
+	w.Header().Set("Content-Type", "text/html; charset=utf-8")
+	return htmlTemplate.Execute(w, info)
 }

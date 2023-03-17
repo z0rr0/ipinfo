@@ -83,6 +83,7 @@ func main() {
 		"/short": handle.TextShortHandler,
 		"/json":  handle.JSONHandler,
 		"/xml":   handle.XMLHandler,
+		"/html":  handle.HTMLHandler,
 	}
 
 	http.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
@@ -97,6 +98,7 @@ func main() {
 		if e != nil {
 			loggerInfo.Println(e)
 			http.Error(w, "ERROR", http.StatusInternalServerError)
+			return
 		}
 
 		url := strings.TrimRight(r.URL.Path, "/ ")

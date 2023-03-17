@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>IPInfo</title>
+</head>
+<body>
+  <h1>{{ .IP }}</h1>
+  <h2>{{ .Location }}</h2>
+  <table>
+    <tr>
+      <td>Longitude</td>
+      <td>{{ .Longitude }}</td>
+    </tr>
+    <tr>
+      <td>Latitude</td>
+      <td>{{ .Latitude }}</td>
+    </tr>
+    <tr>
+      <td>Time zone</td>
+      <td>{{ .TimeZone }}</td>
+    </tr>
+    <tr>
+      <td>Local time</td>
+      <td><strong>{{ .LocalTime }}</strong></td>
+    </tr>
+    <tr>
+      <td>UTC time</td>
+      <td>{{ .UTCTime }}</td>
+    </tr>
+  </table>
+</body>
+</html>

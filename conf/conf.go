@@ -44,13 +44,34 @@ type StrParam struct {
 
 // IPInfo is IP and related info for response.
 type IPInfo struct {
-	IP        string  `xml:"ip" json:"ip"`
-	Country   string  `xml:"country" json:"country"`
-	City      string  `xml:"city" json:"city"`
-	Longitude float64 `xml:"longitude" json:"longitude"`
-	Latitude  float64 `xml:"latitude" json:"latitude"`
-	UTCTime   string  `xml:"utc_time" json:"utc_time"`
-	TimeZone  string  `xml:"time_zone" json:"time_zone"`
+	IP        string    `xml:"ip" json:"ip"`
+	Country   string    `xml:"country" json:"country"`
+	City      string    `xml:"city" json:"city"`
+	Longitude float64   `xml:"longitude" json:"longitude"`
+	Latitude  float64   `xml:"latitude" json:"latitude"`
+	UTCTime   string    `xml:"utc_time" json:"utc_time"`
+	TimeZone  string    `xml:"time_zone" json:"time_zone"`
+	Timestamp time.Time `xml:"-" json:"-"`
+}
+
+// LocalTime returns local time in RFC3339 format or "-" if error.
+func (i *IPInfo) LocalTime() string {
+	loc, err := time.LoadLocation(i.TimeZone)
+	if err != nil {
+		return "-"
+	}
+	return i.Timestamp.In(loc).Format(time.RFC3339)
+}
+
+// Location returns location string.
+func (i *IPInfo) Location() string {
+	if i.Country == "" {
+		return ""
+	}
+	if i.City == "" {
+		return i.Country
+	}
+	return fmt.Sprintf("%s, %s", i.Country, i.City)
 }
 
 // Info returns base info about request.
@@ -70,14 +91,16 @@ func (c *Cfg) Info(r *http.Request) (*IPInfo, error) {
 		isoCode = defaultISOCode
 	}
 
+	utcNow := time.Now().UTC()
 	info := IPInfo{
 		IP:        host,
 		Country:   city.Country.Names[isoCode],
 		City:      city.City.Names[isoCode],
 		Longitude: city.Location.Longitude,
 		Latitude:  city.Location.Latitude,
-		UTCTime:   time.Now().UTC().Format(time.RFC3339),
+		UTCTime:   utcNow.Format(time.RFC3339),
 		TimeZone:  city.Location.TimeZone,
+		Timestamp: utcNow,
 	}
 	return &info, nil
 }

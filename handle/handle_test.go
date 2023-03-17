@@ -19,6 +19,11 @@ func TestJSONHandler(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
+	defer func() {
+		if closeErr := cfg.Close(); closeErr != nil {
+			t.Errorf("close error: %v", closeErr)
+		}
+	}()
 
 	req := httptest.NewRequest("GET", "http://example.com/foo", nil)
 	req.Header.Add("X-Real-Ip", "193.138.218.226")
@@ -56,7 +61,9 @@ func TestJSONHandler(t *testing.T) {
 		Longitude: 12.9982,
 		Latitude:  55.6078,
 		TimeZone:  "Europe/Stockholm",
-		UTCTime:   info.UTCTime, // don't check time
+		// don't check time fields
+		UTCTime:   info.UTCTime,
+		Timestamp: responseInfo.Timestamp,
 	}
 	if *responseInfo != *expected {
 		t.Errorf("not equal JSONInfo: %v", info)
@@ -72,6 +79,11 @@ func TestXMLHandler(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
+	defer func() {
+		if closeErr := cfg.Close(); closeErr != nil {
+			t.Errorf("close error: %v", closeErr)
+		}
+	}()
 
 	req := httptest.NewRequest("GET", "http://example.com/foo", nil)
 	req.Header.Add("X-Real-Ip", "193.138.218.226")
@@ -111,7 +123,9 @@ func TestXMLHandler(t *testing.T) {
 			Longitude: 12.9982,
 			Latitude:  55.6078,
 			TimeZone:  "Europe/Stockholm",
-			UTCTime:   responseInfo.UTCTime, // don't check time
+			// don't check time
+			UTCTime:   responseInfo.UTCTime,
+			Timestamp: responseInfo.Timestamp,
 		},
 	}
 	if *responseInfo != *expected {
@@ -128,6 +142,11 @@ func TestTextShortHandler(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
+	defer func() {
+		if closeErr := cfg.Close(); closeErr != nil {
+			t.Errorf("close error: %v", closeErr)
+		}
+	}()
 
 	req := httptest.NewRequest("GET", "http://example.com/foo", nil)
 	req.Header.Add("X-Real-Ip", "193.138.218.226")
@@ -174,6 +193,11 @@ func TestTextHandler(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
+	defer func() {
+		if closeErr := cfg.Close(); closeErr != nil {
+			t.Errorf("close error: %v", closeErr)
+		}
+	}()
 
 	req := httptest.NewRequest("GET", "http://example.com/foo?b=1&c=3", nil)
 	req.Header.Add("X-Real-Ip", "193.138.218.226")
@@ -213,5 +237,60 @@ func TestTextHandler(t *testing.T) {
 	subStr = "Locations\n---------\nCountry: Sweden\nCity: Malmo\nLatitude: 55.6078\nLongitude: 12.9982\nTimeZone:"
 	if !strings.Contains(strBody, subStr) {
 		t.Fatalf("not found required second sub-string: %v", strBody)
+	}
+}
+
+func TestHTMLHandler(t *testing.T) {
+	cfg, err := conf.New(testConfigName)
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer func() {
+		if closeErr := cfg.Close(); closeErr != nil {
+			t.Errorf("close error: %v", closeErr)
+		}
+	}()
+
+	req := httptest.NewRequest("GET", "http://example.com/foo", nil)
+	req.Header.Add("X-Real-Ip", "193.138.218.226")
+	req.Header.Add("X-Header-A", "a")
+
+	info, err := cfg.Info(req)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	w := httptest.NewRecorder()
+	err = HTMLHandler(w, info)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	resp := w.Result()
+	if resp.StatusCode != http.StatusOK {
+		t.Errorf("not %d status code: %v", http.StatusOK, resp.StatusCode)
+	}
+
+	if ct := resp.Header.Get("Content-Type"); ct != "text/html; charset=utf-8" {
+		t.Errorf("not equal Content-Type: %v", ct)
+	}
+
+	body, err := io.ReadAll(resp.Body)
+	if err != nil {
+		t.Fatal(err)
+	}
+	strBody := string(body)
+
+	expectedSubStrings := []string{
+		"<h1>193.138.218.226</h1>",
+		"<h2>Sweden, Malmo</h2>",
+		"<td>55.6078</td>",
+		"<td>12.9982</td>",
+		"<td>Europe/Stockholm</td>",
+	}
+	for _, subStr := range expectedSubStrings {
+		if !strings.Contains(strBody, subStr) {
+			t.Fatalf("not found required sub-string: %v", strBody)
+		}
 	}
 }

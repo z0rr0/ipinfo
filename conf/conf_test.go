@@ -8,6 +8,7 @@ package conf
 import (
 	"net/http/httptest"
 	"testing"
+	"time"
 )
 
 const testConfigName = "/tmp/ipinfo_test.json"
@@ -41,6 +42,11 @@ func TestCfg_GetCity(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
+	defer func() {
+		if closeErr := cfg.Close(); closeErr != nil {
+			t.Errorf("close error: %v", closeErr)
+		}
+	}()
 
 	_, err = cfg.GetCity("127.0.0.1")
 	if err != nil {
@@ -63,6 +69,11 @@ func TestCfg_GetIP(t *testing.T) {
 	if e != nil {
 		t.Fatal(e)
 	}
+	defer func() {
+		if closeErr := cfg.Close(); closeErr != nil {
+			t.Errorf("close error: %v", closeErr)
+		}
+	}()
 
 	cases := []struct {
 		name       string
@@ -122,6 +133,12 @@ func TestCfg_GetHeaders(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
+	defer func() {
+		if closeErr := cfg.Close(); closeErr != nil {
+			t.Errorf("close error: %v", closeErr)
+		}
+	}()
+
 	req := httptest.NewRequest("GET", "https://example.com/foo", nil)
 	result := cfg.GetHeaders(req)
 	if len(result) > 0 {
@@ -157,6 +174,12 @@ func TestCfg_GetParams(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
+	defer func() {
+		if closeErr := cfg.Close(); closeErr != nil {
+			t.Errorf("close error: %v", closeErr)
+		}
+	}()
+
 	req := httptest.NewRequest("GET", "https://example.com/foo", nil)
 	result := cfg.GetParams(req)
 	if len(result) > 0 {
@@ -189,6 +212,11 @@ func TestCfg_Info(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
+	defer func() {
+		if closeErr := cfg.Close(); closeErr != nil {
+			t.Errorf("close error: %v", closeErr)
+		}
+	}()
 
 	req := httptest.NewRequest("GET", "https://example.com/foo", nil)
 	req.Header.Add("X-Real-Ip", "193.138.218.226")
@@ -205,10 +233,53 @@ func TestCfg_Info(t *testing.T) {
 		Longitude: 12.9982,
 		Latitude:  55.6078,
 		TimeZone:  "Europe/Stockholm",
-		UTCTime:   info.UTCTime, // don't check time
+		// don't check time fields
+		UTCTime:   info.UTCTime,
+		Timestamp: info.Timestamp,
 	}
 
 	if i := *info; i != expected {
 		t.Errorf("not equal %v != %v", i, expected)
+	}
+}
+
+func TestIPInfo_LocalTime(t *testing.T) {
+	var info IPInfo
+	ts := time.Date(2019, 1, 2, 3, 4, 5, 6, time.UTC)
+	cases := []struct {
+		name     string
+		timeZone string
+		expected string
+	}{
+		{name: "empty", expected: "2019-01-02T03:04:05Z"},
+		{name: "invalid", timeZone: "invalid", expected: "-"},
+		{name: "Europe/Stockholm", timeZone: "Europe/Stockholm", expected: "2019-01-02T04:04:05+01:00"},
+	}
+	for _, c := range cases {
+		info = IPInfo{TimeZone: c.timeZone, Timestamp: ts}
+		if result := info.LocalTime(); result != c.expected {
+			t.Errorf("%s: not equal %v != %v", c.name, result, c.expected)
+		}
+	}
+}
+
+func TestIPInfo_Location(t *testing.T) {
+	var info IPInfo
+	cases := []struct {
+		name     string
+		country  string
+		city     string
+		expected string
+	}{
+		{name: "empty", expected: ""},
+		{name: "country", country: "Sweden", expected: "Sweden"},
+		{name: "city", city: "Malmo", expected: ""},
+		{name: "country and city", country: "Sweden", city: "Malmo", expected: "Sweden, Malmo"},
+	}
+	for _, c := range cases {
+		info = IPInfo{Country: c.country, City: c.city}
+		if result := info.Location(); result != c.expected {
+			t.Errorf("%s: not equal %v != %v", c.name, result, c.expected)
+		}
 	}
 }
