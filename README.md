@@ -10,6 +10,7 @@ IP info web service. It handles 4 requests:
 2. `/short` - short info about request IP
 3. `/json` - json info about request IP
 4. `/xml` - json info about request IP
+5. `/html` - html info about request IP
 
 ![example](example.png)
 
