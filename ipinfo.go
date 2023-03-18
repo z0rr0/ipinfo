@@ -17,6 +17,7 @@ import (
 	"strings"
 	"syscall"
 	"time"
+	_ "time/tzdata"
 
 	"github.com/z0rr0/ipinfo/conf"
 	"github.com/z0rr0/ipinfo/handle"
