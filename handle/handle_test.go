@@ -282,10 +282,13 @@ func TestHTMLHandler(t *testing.T) {
 	strBody := string(body)
 
 	expectedSubStrings := []string{
-		"<h1>193.138.218.226</h1>",
-		"<h2>Sweden, Malmo</h2>",
+		"<h1>Sweden, Malmo</h1>",
+		"<h2>193.138.218.226</h2>",
+		"<td>Latitude</td>",
 		"<td>55.6078</td>",
+		"<td>Longitude</td>",
 		"<td>12.9982</td>",
+		"<td>Time zone</td>",
 		"<td>Europe/Stockholm</td>",
 	}
 	for _, subStr := range expectedSubStrings {
