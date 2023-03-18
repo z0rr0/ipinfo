@@ -1,5 +1,5 @@
 TARGET=ipinfo
-TS=$(shell date -u +"%F_%T")
+TS=$(shell date -u +"%FT%T")
 TAG=$(shell git tag | sort -V | tail -1)
 COMMIT=$(shell git log --oneline | head -1)
 VERSION=$(firstword $(COMMIT))

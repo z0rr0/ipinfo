@@ -233,6 +233,7 @@ func TestCfg_Info(t *testing.T) {
 		Longitude: 12.9982,
 		Latitude:  55.6078,
 		TimeZone:  "Europe/Stockholm",
+		Language:  defaultISOCode,
 		// don't check time fields
 		UTCTime:   info.UTCTime,
 		Timestamp: info.Timestamp,

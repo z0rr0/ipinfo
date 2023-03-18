@@ -56,12 +56,9 @@ func main() {
 	config := flag.String("config", Config, "configuration file")
 	flag.Parse()
 
-	versionInfo := fmt.Sprintf(
-		"\tVersion: %v\n\tRevision: %v\n\tBuild date: %v\n\tGo version: %v",
-		Version, Revision, BuildDate, GoVersion,
-	)
+	buildInfo := &handle.BuildInfo{Version: Version, Revision: Revision, BuildDate: BuildDate, GoVersion: GoVersion}
 	if *version {
-		fmt.Println(versionInfo)
+		fmt.Println(buildInfo.String())
 		return
 	}
 
@@ -78,13 +75,14 @@ func main() {
 		MaxHeaderBytes: 1 << 20, // 1MB
 		ErrorLog:       loggerInfo,
 	}
-	loggerInfo.Printf("\n%v\nlisten addr: %v\n", versionInfo, srv.Addr)
+	loggerInfo.Printf("\n%v\nlisten addr: %v\n", buildInfo.String(), srv.Addr)
 
-	handlers := map[string]func(http.ResponseWriter, *conf.IPInfo) error{
-		"/short": handle.TextShortHandler,
-		"/json":  handle.JSONHandler,
-		"/xml":   handle.XMLHandler,
-		"/html":  handle.HTMLHandler,
+	handlers := map[string]func(http.ResponseWriter, *conf.IPInfo, *handle.BuildInfo) error{
+		"/short":   handle.TextShortHandler,
+		"/json":    handle.JSONHandler,
+		"/xml":     handle.XMLHandler,
+		"/html":    handle.HTMLHandler,
+		"/version": handle.VersionHandler,
 	}
 
 	http.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
@@ -104,7 +102,7 @@ func main() {
 
 		url := strings.TrimRight(r.URL.Path, "/ ")
 		if h, ok := handlers[url]; ok {
-			e = h(w, info)
+			e = h(w, info, buildInfo)
 		} else {
 			e = handle.TextHandler(w, r, cfg, info)
 		}

@@ -51,6 +51,7 @@ type IPInfo struct {
 	Latitude  float64   `xml:"latitude" json:"latitude"`
 	UTCTime   string    `xml:"utc_time" json:"utc_time"`
 	TimeZone  string    `xml:"time_zone" json:"time_zone"`
+	Language  string    `xml:"-" json:"-"`
 	Timestamp time.Time `xml:"-" json:"-"`
 }
 
@@ -100,6 +101,7 @@ func (c *Cfg) Info(r *http.Request) (*IPInfo, error) {
 		Latitude:  city.Location.Latitude,
 		UTCTime:   utcNow.Format(time.RFC3339),
 		TimeZone:  city.Location.TimeZone,
+		Language:  isoCode,
 		Timestamp: utcNow,
 	}
 	return &info, nil

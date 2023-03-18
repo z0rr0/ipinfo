@@ -25,7 +25,7 @@ func TestJSONHandler(t *testing.T) {
 		}
 	}()
 
-	req := httptest.NewRequest("GET", "http://example.com/foo", nil)
+	req := httptest.NewRequest("GET", "https://example.com/foo", nil)
 	req.Header.Add("X-Real-Ip", "193.138.218.226")
 
 	info, err := cfg.Info(req)
@@ -34,7 +34,7 @@ func TestJSONHandler(t *testing.T) {
 	}
 
 	w := httptest.NewRecorder()
-	err = JSONHandler(w, info)
+	err = JSONHandler(w, info, nil)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -85,7 +85,7 @@ func TestXMLHandler(t *testing.T) {
 		}
 	}()
 
-	req := httptest.NewRequest("GET", "http://example.com/foo", nil)
+	req := httptest.NewRequest("GET", "https://example.com/foo", nil)
 	req.Header.Add("X-Real-Ip", "193.138.218.226")
 
 	info, err := cfg.Info(req)
@@ -94,7 +94,7 @@ func TestXMLHandler(t *testing.T) {
 	}
 
 	w := httptest.NewRecorder()
-	err = XMLHandler(w, info)
+	err = XMLHandler(w, info, nil)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -148,7 +148,7 @@ func TestTextShortHandler(t *testing.T) {
 		}
 	}()
 
-	req := httptest.NewRequest("GET", "http://example.com/foo", nil)
+	req := httptest.NewRequest("GET", "https://example.com/foo", nil)
 	req.Header.Add("X-Real-Ip", "193.138.218.226")
 
 	info, err := cfg.Info(req)
@@ -157,7 +157,7 @@ func TestTextShortHandler(t *testing.T) {
 	}
 
 	w := httptest.NewRecorder()
-	err = TextShortHandler(w, info)
+	err = TextShortHandler(w, info, nil)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -199,7 +199,7 @@ func TestTextHandler(t *testing.T) {
 		}
 	}()
 
-	req := httptest.NewRequest("GET", "http://example.com/foo?b=1&c=3", nil)
+	req := httptest.NewRequest("GET", "https://example.com/foo?b=1&c=3", nil)
 	req.Header.Add("X-Real-Ip", "193.138.218.226")
 	req.Header.Add("X-Header-A", "a")
 
@@ -251,7 +251,7 @@ func TestHTMLHandler(t *testing.T) {
 		}
 	}()
 
-	req := httptest.NewRequest("GET", "http://example.com/foo", nil)
+	req := httptest.NewRequest("GET", "https://example.com/foo", nil)
 	req.Header.Add("X-Real-Ip", "193.138.218.226")
 	req.Header.Add("X-Header-A", "a")
 
@@ -261,7 +261,7 @@ func TestHTMLHandler(t *testing.T) {
 	}
 
 	w := httptest.NewRecorder()
-	err = HTMLHandler(w, info)
+	err = HTMLHandler(w, info, nil)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -295,5 +295,60 @@ func TestHTMLHandler(t *testing.T) {
 		if !strings.Contains(strBody, subStr) {
 			t.Fatalf("not found required sub-string: %v", strBody)
 		}
+	}
+}
+
+func TestVersionHandler(t *testing.T) {
+	cfg, err := conf.New(testConfigName)
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer func() {
+		if closeErr := cfg.Close(); closeErr != nil {
+			t.Errorf("close error: %v", closeErr)
+		}
+	}()
+
+	req := httptest.NewRequest("GET", "https://example.com/foo", nil)
+	req.Header.Add("X-Real-Ip", "193.138.218.226")
+	req.Header.Add("X-Header-A", "a")
+
+	info, err := cfg.Info(req)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	w := httptest.NewRecorder()
+
+	buildInfo := &BuildInfo{Version: "v1.0", Revision: "git:abc", BuildDate: "2000-01-01", GoVersion: "go1.0"}
+	err = VersionHandler(w, info, buildInfo)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	resp := w.Result()
+	if resp.StatusCode != http.StatusOK {
+		t.Errorf("not %d status code: %v", http.StatusOK, resp.StatusCode)
+	}
+
+	if ct := resp.Header.Get("Content-Type"); ct != "text/plain; charset=utf-8" {
+		t.Errorf("not equal Content-Type: %v", ct)
+	}
+
+	body, err := io.ReadAll(resp.Body)
+	if err != nil {
+		t.Fatal(err)
+	}
+	strBody := string(body)
+
+	expectedPrefix := "Version:    v1.0\n" +
+		"Revision:   git:abc\n" +
+		"Build date: 2000-01-01\n" +
+		"Go version: go1.0\n" +
+		"Language:   en\n" +
+		"Location:   Sweden, Malmo\n"
+
+	if !strings.HasPrefix(strBody, expectedPrefix) {
+		t.Fatalf("not found required prefix: %v", strBody)
 	}
 }
