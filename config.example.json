@@ -1,6 +1,6 @@
 {
   "host": "127.0.0.1",
-  "port": 8089,
+  "port": 8082,
   "db": "/tmp/GeoLite2-City.mmdb",
   "ignore_headers": [
     "X-Forwarded-For",
