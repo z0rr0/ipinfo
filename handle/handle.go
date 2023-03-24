@@ -42,6 +42,7 @@ type XMLInfo struct {
 // TextHandler is handler for text/plain response.
 func TextHandler(w http.ResponseWriter, r *http.Request, cfg *conf.Cfg, info *conf.IPInfo) error {
 	w.Header().Set("Content-Type", "text/plain; charset=utf-8")
+	w.Header().Set("Cache-Control", "no-cache, no-store, must-revalidate")
 
 	err := printF(nil, w, "IP: %v\nProto: %v\nMethod: %v\nURI: %v\n",
 		info.IP, r.Proto, r.Method, r.RequestURI,
@@ -56,6 +57,7 @@ func TextHandler(w http.ResponseWriter, r *http.Request, cfg *conf.Cfg, info *co
 // It returns only IP address, country, city and time.
 func TextShortHandler(w http.ResponseWriter, info *conf.IPInfo, _ *BuildInfo) error {
 	w.Header().Set("Content-Type", "text/plain; charset=utf-8")
+	w.Header().Set("Cache-Control", "no-cache, no-store, must-revalidate")
 
 	err := printF(nil, w, "IP:         %v\n", info.IP)
 	err = printF(err, w, "Country:    %v\n", info.Country)
@@ -67,12 +69,15 @@ func TextShortHandler(w http.ResponseWriter, info *conf.IPInfo, _ *BuildInfo) er
 // JSONHandler is handler for application/json response.
 func JSONHandler(w http.ResponseWriter, info *conf.IPInfo, _ *BuildInfo) error {
 	w.Header().Set("Content-Type", "application/json; charset=utf-8")
+	w.Header().Set("Cache-Control", "no-cache, no-store, must-revalidate")
 	return json.NewEncoder(w).Encode(info)
 }
 
 // XMLHandler is handler for application/xml response.
 func XMLHandler(w http.ResponseWriter, info *conf.IPInfo, _ *BuildInfo) error {
 	w.Header().Set("Content-Type", "application/xml; charset=utf-8")
+	w.Header().Set("Cache-Control", "no-cache, no-store, must-revalidate")
+
 	if err := printF(nil, w, xml.Header); err != nil {
 		return fmt.Errorf("XMLHandler: %w", err)
 	}
@@ -82,12 +87,14 @@ func XMLHandler(w http.ResponseWriter, info *conf.IPInfo, _ *BuildInfo) error {
 // HTMLHandler is handler for text/html response.
 func HTMLHandler(w http.ResponseWriter, info *conf.IPInfo, _ *BuildInfo) error {
 	w.Header().Set("Content-Type", "text/html; charset=utf-8")
+	w.Header().Set("Cache-Control", "no-cache, no-store, must-revalidate")
 	return htmlTemplate.Execute(w, info)
 }
 
 // VersionHandler is handler for version information.
 func VersionHandler(w http.ResponseWriter, info *conf.IPInfo, buildInfo *BuildInfo) error {
 	w.Header().Set("Content-Type", "text/plain; charset=utf-8")
+	w.Header().Set("Cache-Control", "no-cache, no-store, must-revalidate")
 
 	err := printF(nil, w, "Version:    %v\n", buildInfo.Version)
 	err = printF(err, w, "Revision:   %v\n", buildInfo.Revision)

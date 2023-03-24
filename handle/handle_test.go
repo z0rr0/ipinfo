@@ -14,6 +14,12 @@ import (
 
 const testConfigName = "/tmp/ipinfo_test.json"
 
+func checkNoCache(t *testing.T, resp *http.Response) {
+	if cc := resp.Header.Get("Cache-Control"); cc != "no-cache, no-store, must-revalidate" {
+		t.Errorf("Cache-Control: %v", resp.Header.Get("Cache-Control"))
+	}
+}
+
 func TestJSONHandler(t *testing.T) {
 	cfg, err := conf.New(testConfigName)
 	if err != nil {
@@ -47,6 +53,7 @@ func TestJSONHandler(t *testing.T) {
 	if ct := resp.Header.Get("Content-Type"); ct != "application/json; charset=utf-8" {
 		t.Errorf("not equal Content-Type: %v", ct)
 	}
+	checkNoCache(t, resp)
 
 	responseInfo := &conf.IPInfo{}
 	err = json.NewDecoder(resp.Body).Decode(responseInfo)
@@ -108,6 +115,7 @@ func TestXMLHandler(t *testing.T) {
 	if ct := resp.Header.Get("Content-Type"); ct != "application/xml; charset=utf-8" {
 		t.Errorf("not equal Content-Type: %v", ct)
 	}
+	checkNoCache(t, resp)
 
 	responseInfo := &XMLInfo{}
 	err = xml.NewDecoder(resp.Body).Decode(responseInfo)
@@ -172,6 +180,7 @@ func TestTextShortHandler(t *testing.T) {
 	if ct := resp.Header.Get("Content-Type"); ct != "text/plain; charset=utf-8" {
 		t.Errorf("not equal Content-Type: %v", ct)
 	}
+	checkNoCache(t, resp)
 
 	body, err := io.ReadAll(resp.Body)
 	if err != nil {
@@ -224,6 +233,7 @@ func TestTextHandler(t *testing.T) {
 	if ct := resp.Header.Get("Content-Type"); ct != "text/plain; charset=utf-8" {
 		t.Errorf("not equal Content-Type: %v", ct)
 	}
+	checkNoCache(t, resp)
 
 	body, err := io.ReadAll(resp.Body)
 	if err != nil {
@@ -276,6 +286,7 @@ func TestHTMLHandler(t *testing.T) {
 	if ct := resp.Header.Get("Content-Type"); ct != "text/html; charset=utf-8" {
 		t.Errorf("not equal Content-Type: %v", ct)
 	}
+	checkNoCache(t, resp)
 
 	body, err := io.ReadAll(resp.Body)
 	if err != nil {
@@ -338,6 +349,7 @@ func TestVersionHandler(t *testing.T) {
 	if ct := resp.Header.Get("Content-Type"); ct != "text/plain; charset=utf-8" {
 		t.Errorf("not equal Content-Type: %v", ct)
 	}
+	checkNoCache(t, resp)
 
 	body, err := io.ReadAll(resp.Body)
 	if err != nil {
