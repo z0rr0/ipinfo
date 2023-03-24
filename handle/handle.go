@@ -57,10 +57,11 @@ func TextHandler(w http.ResponseWriter, r *http.Request, cfg *conf.Cfg, info *co
 func TextShortHandler(w http.ResponseWriter, info *conf.IPInfo, _ *BuildInfo) error {
 	w.Header().Set("Content-Type", "text/plain; charset=utf-8")
 
-	err := printF(nil, w, "IP:      %v\n", info.IP)
-	err = printF(err, w, "Country: %v\n", info.Country)
-	err = printF(err, w, "City:    %v\n", info.City)
-	return printF(err, w, "TimeUTC: %v\n", info.UTCTime)
+	err := printF(nil, w, "IP:         %v\n", info.IP)
+	err = printF(err, w, "Country:    %v\n", info.Country)
+	err = printF(err, w, "City:       %v\n", info.City)
+	err = printF(err, w, "Local time: %v\n", info.LocalTime())
+	return printF(err, w, "UTC time:   %v\n", info.UTCTime)
 }
 
 // JSONHandler is handler for application/json response.
@@ -90,9 +91,6 @@ func VersionHandler(w http.ResponseWriter, info *conf.IPInfo, buildInfo *BuildIn
 
 	err := printF(nil, w, "Version:    %v\n", buildInfo.Version)
 	err = printF(err, w, "Revision:   %v\n", buildInfo.Revision)
-	err = printF(err, w, "Build date: %v\n", buildInfo.BuildDate)
 	err = printF(err, w, "Go version: %v\n", buildInfo.GoVersion)
-	err = printF(err, w, "Language:   %v\n", info.Language)
-	err = printF(err, w, "Location:   %v\n", info.Location())
-	return printF(err, w, "Local time: %v\n", info.LocalTime())
+	return printF(err, w, "Build date: %v\n", buildInfo.BuildDate)
 }

@@ -5,8 +5,8 @@
     <title>IPInfo</title>
 </head>
 <body>
-  <h1>{{ .Location }}</h1>
-  <h2>{{ .IP }}</h2>
+  <h2>{{ .Location }}</h2>
+  <h3>{{ .IP }}</h3>
   <table>
     <tr>
       <td>Longitude</td>
@@ -21,8 +21,12 @@
       <td>{{ .TimeZone }}</td>
     </tr>
     <tr>
+      <td>Language</td>
+      <td>{{ .Language }}</td>
+    </tr>
+    <tr>
       <td>Local time</td>
-      <td><strong>{{ .LocalTime }}</strong></td>
+      <td>{{ .LocalTime }}</td>
     </tr>
     <tr>
       <td>UTC time</td>

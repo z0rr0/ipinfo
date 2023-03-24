@@ -51,7 +51,7 @@ type IPInfo struct {
 	Latitude  float64   `xml:"latitude" json:"latitude"`
 	UTCTime   string    `xml:"utc_time" json:"utc_time"`
 	TimeZone  string    `xml:"time_zone" json:"time_zone"`
-	Language  string    `xml:"-" json:"-"`
+	Language  string    `xml:"language" json:"language"`
 	Timestamp time.Time `xml:"-" json:"-"`
 }
 

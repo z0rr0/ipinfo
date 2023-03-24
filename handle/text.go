@@ -47,6 +47,8 @@ func sectionLocation(err error, w io.Writer, info *conf.IPInfo) error {
 	err = printF(err, w, "City: %v\n", info.City)
 	err = printF(err, w, "Latitude: %v\n", info.Latitude)
 	err = printF(err, w, "Longitude: %v\n", info.Longitude)
-	err = printF(err, w, "TimeZone: %v\n", info.TimeZone)
-	return printF(err, w, "TimeUTC: %v\n", info.UTCTime)
+	err = printF(err, w, "Time zone: %v\n", info.TimeZone)
+	err = printF(err, w, "Language: %v\n", info.Language)
+	err = printF(err, w, "Local time: %v\n", info.LocalTime())
+	return printF(err, w, "UTC Time: %v\n", info.UTCTime)
 }

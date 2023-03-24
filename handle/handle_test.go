@@ -61,6 +61,7 @@ func TestJSONHandler(t *testing.T) {
 		Longitude: 12.9982,
 		Latitude:  55.6078,
 		TimeZone:  "Europe/Stockholm",
+		Language:  "en",
 		// don't check time fields
 		UTCTime:   info.UTCTime,
 		Timestamp: responseInfo.Timestamp,
@@ -123,6 +124,7 @@ func TestXMLHandler(t *testing.T) {
 			Longitude: 12.9982,
 			Latitude:  55.6078,
 			TimeZone:  "Europe/Stockholm",
+			Language:  "en",
 			// don't check time
 			UTCTime:   responseInfo.UTCTime,
 			Timestamp: responseInfo.Timestamp,
@@ -176,13 +178,13 @@ func TestTextShortHandler(t *testing.T) {
 		t.Fatal(err)
 	}
 	strBody := string(body)
-	i := strings.Index(strBody, "TimeUTC")
+	i := strings.Index(strBody, "Local time:")
 	if i < 0 {
-		t.Fatalf("not found TimeUTC: %v", strBody)
+		t.Fatalf("not found 'Local time': %v", strBody)
 	}
 
 	strBody = strBody[:i]
-	expected := "IP:      193.138.218.226\nCountry: Sweden\nCity:    Malmo\n"
+	expected := "IP:         193.138.218.226\nCountry:    Sweden\nCity:       Malmo\n"
 	if strBody != expected {
 		t.Errorf("not equal text body: %v", strBody)
 	}
@@ -234,7 +236,7 @@ func TestTextHandler(t *testing.T) {
 		t.Fatalf("not found required first sub-string: %v", strBody)
 	}
 
-	subStr = "Locations\n---------\nCountry: Sweden\nCity: Malmo\nLatitude: 55.6078\nLongitude: 12.9982\nTimeZone:"
+	subStr = "Locations\n---------\nCountry: Sweden\nCity: Malmo\nLatitude: 55.6078\nLongitude: 12.9982\nTime zone:"
 	if !strings.Contains(strBody, subStr) {
 		t.Fatalf("not found required second sub-string: %v", strBody)
 	}
@@ -282,14 +284,16 @@ func TestHTMLHandler(t *testing.T) {
 	strBody := string(body)
 
 	expectedSubStrings := []string{
-		"<h1>Sweden, Malmo</h1>",
-		"<h2>193.138.218.226</h2>",
+		"<h2>Sweden, Malmo</h2>",
+		"<h3>193.138.218.226</h3>",
 		"<td>Latitude</td>",
 		"<td>55.6078</td>",
 		"<td>Longitude</td>",
 		"<td>12.9982</td>",
 		"<td>Time zone</td>",
 		"<td>Europe/Stockholm</td>",
+		"<td>Language</td>",
+		"<td>en</td>",
 	}
 	for _, subStr := range expectedSubStrings {
 		if !strings.Contains(strBody, subStr) {
@@ -343,10 +347,8 @@ func TestVersionHandler(t *testing.T) {
 
 	expectedPrefix := "Version:    v1.0\n" +
 		"Revision:   git:abc\n" +
-		"Build date: 2000-01-01\n" +
 		"Go version: go1.0\n" +
-		"Language:   en\n" +
-		"Location:   Sweden, Malmo\n"
+		"Build date: 2000-01-01\n"
 
 	if !strings.HasPrefix(strBody, expectedPrefix) {
 		t.Fatalf("not found required prefix: %v", strBody)
