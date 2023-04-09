@@ -8,7 +8,13 @@ RUN echo "LDFLAGS = $LDFLAGS"
 RUN GOOS=linux go build -ldflags "$LDFLAGS" -o ./ipinfo
 
 FROM alpine:3.17
-MAINTAINER Alexander Zaitsev "me@axv.email"
+LABEL org.opencontainers.image.authors="me@axv.email" \
+        org.opencontainers.image.url="https://hub.docker.com/r/z0rr0/ipinfo" \
+        org.opencontainers.image.documentation="https://github.com/z0rr0/ipinfo" \
+        org.opencontainers.image.source="https://github.com/z0rr0/ipinfo" \
+        org.opencontainers.image.licenses="BSD-3-Clause" \
+        org.opencontainers.image.title="IPInfo" \
+        org.opencontainers.image.description="IP info web service"
 COPY --from=builder /go/src/github.com/z0rr0/ipinfo/ipinfo /bin/
 RUN chmod 0755 /bin/ipinfo
 
