@@ -66,6 +66,18 @@ func TextShortHandler(w http.ResponseWriter, info *conf.IPInfo, _ *BuildInfo) er
 	return printF(err, w, "UTC time:   %v\n", info.UTCTime)
 }
 
+// TextCompactHandler is handler for text/plain response with compact info.
+func TextCompactHandler(w http.ResponseWriter, info *conf.IPInfo, _ *BuildInfo) error {
+	w.Header().Set("Content-Type", "text/plain; charset=utf-8")
+	w.Header().Set("Cache-Control", "no-cache, no-store, must-revalidate")
+
+	err := printF(nil, w, "%s %s\n", info.Country, info.City)
+	err = printF(err, w, "%s\n", info.IP)
+
+	_, localTime := info.LocalDateTime()
+	return printF(err, w, "%s\n", localTime)
+}
+
 // JSONHandler is handler for application/json response.
 func JSONHandler(w http.ResponseWriter, info *conf.IPInfo, _ *BuildInfo) error {
 	w.Header().Set("Content-Type", "application/json; charset=utf-8")

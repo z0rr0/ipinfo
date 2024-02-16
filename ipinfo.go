@@ -1,4 +1,4 @@
-// Copyright 2023 Aleksandr Zaitsev <me@axv.email>.
+// Copyright 2024 Aleksandr Zaitsev <me@axv.email>.
 // All rights reserved. Use of this source code is governed
 // by a BSD-style license that can be found in the LICENSE file.
 
@@ -7,6 +7,7 @@ package main
 
 import (
 	"context"
+	"errors"
 	"flag"
 	"fmt"
 	"log"
@@ -79,6 +80,7 @@ func main() {
 
 	handlers := map[string]func(http.ResponseWriter, *conf.IPInfo, *handle.BuildInfo) error{
 		"/short":   handle.TextShortHandler,
+		"/compact": handle.TextCompactHandler,
 		"/json":    handle.JSONHandler,
 		"/xml":     handle.XMLHandler,
 		"/html":    handle.HTMLHandler,
@@ -125,7 +127,7 @@ func main() {
 		close(idleConnsClosed)
 	}()
 
-	if err = srv.ListenAndServe(); err != http.ErrServerClosed {
+	if err = srv.ListenAndServe(); !errors.Is(err, http.ErrServerClosed) {
 		loggerInfo.Printf("HTTP server ListenAndServe error: %v", err)
 	}
 

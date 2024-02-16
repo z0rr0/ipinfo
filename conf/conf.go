@@ -64,6 +64,17 @@ func (i *IPInfo) LocalTime() string {
 	return i.Timestamp.In(loc).Format(time.RFC3339)
 }
 
+// LocalDateTime returns separated local date and time strings or "-" if error.
+func (i *IPInfo) LocalDateTime() (string, string) {
+	loc, err := time.LoadLocation(i.TimeZone)
+	if err != nil {
+		return "-", "-"
+	}
+
+	locTime := i.Timestamp.In(loc)
+	return locTime.Format(time.DateOnly), locTime.Format(time.TimeOnly)
+}
+
 // Location returns location string.
 func (i *IPInfo) Location() string {
 	if i.Country == "" {
@@ -155,19 +166,9 @@ func (c *Cfg) Close() error {
 
 // New returns new rates configuration.
 func New(filename string) (*Cfg, error) {
-	fullPath, err := filepath.Abs(strings.Trim(filename, " "))
+	jsonData, err := readConfig(filename)
 	if err != nil {
-		return nil, err
-	}
-
-	_, err = os.Stat(fullPath)
-	if err != nil {
-		return nil, err
-	}
-
-	jsonData, err := os.ReadFile(fullPath)
-	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("read config: %w", err)
 	}
 
 	c := &Cfg{}
@@ -225,4 +226,29 @@ func (c *Cfg) GetParams(r *http.Request) []StrParam {
 		return result[i].Name < result[j].Name
 	})
 	return result
+}
+
+func readConfig(filename string) ([]byte, error) {
+	const (
+		dockerDir  = "/data/conf"
+		testConfig = "/tmp/ipinfo_test.json"
+	)
+
+	currentDir, err := os.Getwd()
+	if err != nil {
+		return nil, fmt.Errorf("get current dir: %w", err)
+	}
+
+	cleanPath := filepath.Clean(strings.Trim(filename, " "))
+
+	if filepath.IsAbs(cleanPath) {
+		if !(cleanPath == testConfig || strings.HasPrefix(cleanPath, dockerDir) || strings.HasPrefix(cleanPath, currentDir)) {
+			return nil, fmt.Errorf("file %q has relative path and not in the allowed directories", cleanPath)
+		}
+	} else {
+
+		cleanPath = filepath.Join(currentDir, cleanPath)
+	}
+
+	return os.ReadFile(cleanPath)
 }
