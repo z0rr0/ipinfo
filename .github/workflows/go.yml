@@ -39,3 +39,9 @@ jobs:
         uses: securego/gosec@master
         with:
           args: ./...
+
+      - name: Run govulncheck
+        uses: golang/govulncheck-action@v1
+        with:
+          go-version-input: "1.22.0"
+          go-package: ./...

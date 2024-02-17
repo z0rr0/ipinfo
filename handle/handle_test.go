@@ -186,6 +186,7 @@ func TestTextShortHandler(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
+
 	strBody := string(body)
 	i := strings.Index(strBody, "Local time:")
 	if i < 0 {
@@ -363,6 +364,54 @@ func TestVersionHandler(t *testing.T) {
 		"Build date: 2000-01-01\n"
 
 	if !strings.HasPrefix(strBody, expectedPrefix) {
+		t.Fatalf("not found required prefix: %v", strBody)
+	}
+}
+
+func TestTestCompactHandler(t *testing.T) {
+	cfg, err := conf.New(testConfigName)
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer func() {
+		if closeErr := cfg.Close(); closeErr != nil {
+			t.Errorf("close error: %v", closeErr)
+		}
+	}()
+
+	req := httptest.NewRequest("GET", "https://example.com/foo", nil)
+	req.Header.Add("X-Real-Ip", "193.138.218.226")
+
+	info, err := cfg.Info(req)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	w := httptest.NewRecorder()
+	err = TextCompactHandler(w, info, nil)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	resp := w.Result()
+	if resp.StatusCode != http.StatusOK {
+		t.Errorf("not %d status code: %v", http.StatusOK, resp.StatusCode)
+	}
+
+	if ct := resp.Header.Get("Content-Type"); ct != "text/plain; charset=utf-8" {
+		t.Errorf("not equal Content-Type: %v", ct)
+	}
+	checkNoCache(t, resp)
+
+	body, err := io.ReadAll(resp.Body)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	strBody := string(body)
+	exected := "Sweden Malmo\n193.138.218.226\n"
+
+	if !strings.HasPrefix(strBody, exected) {
 		t.Fatalf("not found required prefix: %v", strBody)
 	}
 }
