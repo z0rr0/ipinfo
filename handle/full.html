@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html lang="{{ .Language }}">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="color-scheme" content="light dark"/>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@picocss/pico@2/css/pico.min.css"/>
+  <title>IPInfo</title>
+</head>
+<body>
+<main class="container-fluid">
+  <h1>{{ .Country }}</h1>
+  <h2>{{ .IP }}</h2>
+
+  <div class="overflow-auto">
+    <table>
+      <tr>
+        <td>City</td>
+        <td>{{ .City }}</td>
+      </tr>
+      <tr>
+        <td>Time zone</td>
+        <td>{{ .TimeZone }}</td>
+      </tr>
+      <tr>
+        <td>Longitude</td>
+        <td>{{ .Longitude }}</td>
+      </tr>
+      <tr>
+        <td>Latitude</td>
+        <td>{{ .Latitude }}</td>
+      </tr>
+      <tr>
+        <td>Language</td>
+        <td>{{ .Language }}</td>
+      </tr>
+      <tr>
+        <td>Local time</td>
+        <td>{{ .LocalTime }}</td>
+      </tr>
+      <tr>
+        <td>UTC time</td>
+        <td>{{ .UTCTime }}</td>
+      </tr>
+    </table>
+  </div>
+</main>
+</body>
+</html>

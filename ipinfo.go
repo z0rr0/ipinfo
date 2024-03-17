@@ -84,6 +84,7 @@ func main() {
 		"/json":    handle.JSONHandler,
 		"/xml":     handle.XMLHandler,
 		"/html":    handle.HTMLHandler,
+		"/full":    handle.FullHTMLHandler,
 		"/version": handle.VersionHandler,
 	}
 

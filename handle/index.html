@@ -1,37 +1,37 @@
 <!DOCTYPE html>
 <html lang="{{ .Language }}">
 <head>
-    <meta charset="UTF-8">
-    <title>IPInfo</title>
+  <meta charset="UTF-8">
+  <title>IPInfo</title>
 </head>
 <body>
-  <h2>{{ .Location }}</h2>
-  <h3>{{ .IP }}</h3>
-  <table>
-    <tr>
-      <td>Longitude</td>
-      <td>{{ .Longitude }}</td>
-    </tr>
-    <tr>
-      <td>Latitude</td>
-      <td>{{ .Latitude }}</td>
-    </tr>
-    <tr>
-      <td>Time zone</td>
-      <td>{{ .TimeZone }}</td>
-    </tr>
-    <tr>
-      <td>Language</td>
-      <td>{{ .Language }}</td>
-    </tr>
-    <tr>
-      <td>Local time</td>
-      <td>{{ .LocalTime }}</td>
-    </tr>
-    <tr>
-      <td>UTC time</td>
-      <td>{{ .UTCTime }}</td>
-    </tr>
-  </table>
+<h2>{{ .Location }}</h2>
+<h3>{{ .IP }}</h3>
+<table>
+  <tr>
+    <td>Longitude</td>
+    <td>{{ .Longitude }}</td>
+  </tr>
+  <tr>
+    <td>Latitude</td>
+    <td>{{ .Latitude }}</td>
+  </tr>
+  <tr>
+    <td>Time zone</td>
+    <td>{{ .TimeZone }}</td>
+  </tr>
+  <tr>
+    <td>Language</td>
+    <td>{{ .Language }}</td>
+  </tr>
+  <tr>
+    <td>Local time</td>
+    <td>{{ .LocalTime }}</td>
+  </tr>
+  <tr>
+    <td>UTC time</td>
+    <td>{{ .UTCTime }}</td>
+  </tr>
+</table>
 </body>
 </html>

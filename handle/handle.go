@@ -15,6 +15,10 @@ var (
 	//go:embed index.html
 	htmlIndex    string
 	htmlTemplate = template.Must(template.New("index").Parse(htmlIndex))
+
+	//go:embed full.html
+	htmlFull         string
+	htmlFullTemplate = template.Must(template.New("full").Parse(htmlFull))
 )
 
 // BuildInfo is a struct for version information.
@@ -103,8 +107,15 @@ func HTMLHandler(w http.ResponseWriter, info *conf.IPInfo, _ *BuildInfo) error {
 	return htmlTemplate.Execute(w, info)
 }
 
+// FullHTMLHandler is handler for full text/html response.
+func FullHTMLHandler(w http.ResponseWriter, info *conf.IPInfo, _ *BuildInfo) error {
+	w.Header().Set("Content-Type", "text/html; charset=utf-8")
+	w.Header().Set("Cache-Control", "no-cache, no-store, must-revalidate")
+	return htmlFullTemplate.Execute(w, info)
+}
+
 // VersionHandler is handler for version information.
-func VersionHandler(w http.ResponseWriter, info *conf.IPInfo, buildInfo *BuildInfo) error {
+func VersionHandler(w http.ResponseWriter, _ *conf.IPInfo, buildInfo *BuildInfo) error {
 	w.Header().Set("Content-Type", "text/plain; charset=utf-8")
 	w.Header().Set("Cache-Control", "no-cache, no-store, must-revalidate")
 

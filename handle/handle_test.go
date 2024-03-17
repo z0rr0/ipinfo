@@ -415,3 +415,66 @@ func TestTestCompactHandler(t *testing.T) {
 		t.Fatalf("not found required prefix: %v", strBody)
 	}
 }
+
+func TestFullHTMLHandler(t *testing.T) {
+	cfg, err := conf.New(testConfigName)
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer func() {
+		if closeErr := cfg.Close(); closeErr != nil {
+			t.Errorf("close error: %v", closeErr)
+		}
+	}()
+
+	req := httptest.NewRequest("GET", "https://example.com/foo", nil)
+	req.Header.Add("X-Real-Ip", "193.138.218.226")
+	req.Header.Add("X-Header-A", "a")
+
+	info, err := cfg.Info(req)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	w := httptest.NewRecorder()
+	err = FullHTMLHandler(w, info, nil)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	resp := w.Result()
+	if resp.StatusCode != http.StatusOK {
+		t.Errorf("not %d status code: %v", http.StatusOK, resp.StatusCode)
+	}
+
+	if ct := resp.Header.Get("Content-Type"); ct != "text/html; charset=utf-8" {
+		t.Errorf("not equal Content-Type: %v", ct)
+	}
+	checkNoCache(t, resp)
+
+	body, err := io.ReadAll(resp.Body)
+	if err != nil {
+		t.Fatal(err)
+	}
+	strBody := string(body)
+
+	expectedSubStrings := []string{
+		"<h1>Sweden</h1>",
+		"<h2>193.138.218.226</h2>",
+		"<td>City</td>",
+		"<td>Malmo</td>",
+		"<td>Latitude</td>",
+		"<td>55.6078</td>",
+		"<td>Longitude</td>",
+		"<td>12.9982</td>",
+		"<td>Time zone</td>",
+		"<td>Europe/Stockholm</td>",
+		"<td>Language</td>",
+		"<td>en</td>",
+	}
+	for _, subStr := range expectedSubStrings {
+		if !strings.Contains(strBody, subStr) {
+			t.Fatalf("not found required sub-string: %v", subStr)
+		}
+	}
+}
