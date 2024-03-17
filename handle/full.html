@@ -5,12 +5,18 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="color-scheme" content="light dark"/>
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@picocss/pico@2/css/pico.min.css"/>
+  <style>
+      .ip-address {
+          opacity: 1;
+          transition: opacity 3s ease-in-out;
+      }
+  </style>
   <title>IPInfo</title>
 </head>
 <body>
 <main class="container-fluid">
   <h1>{{ .Country }}</h1>
-  <h2>{{ .IP }}</h2>
+  <h2 class="ip-address" id="ip">{{ .IP }}</h2>
 
   <div class="overflow-auto">
     <table>
@@ -45,5 +51,12 @@
     </table>
   </div>
 </main>
+<script>
+    window.onload = function () {
+        setTimeout(function () {
+            document.getElementById('ip').style.opacity = '0.3';
+        }, 0);
+    };
+</script>
 </body>
 </html>

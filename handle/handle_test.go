@@ -460,7 +460,7 @@ func TestFullHTMLHandler(t *testing.T) {
 
 	expectedSubStrings := []string{
 		"<h1>Sweden</h1>",
-		"<h2>193.138.218.226</h2>",
+		"<h2 class=\"ip-address\" id=\"ip\">193.138.218.226</h2>",
 		"<td>City</td>",
 		"<td>Malmo</td>",
 		"<td>Latitude</td>",
