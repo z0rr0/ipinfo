@@ -189,15 +189,26 @@ func New(filename string) (*Cfg, error) {
 	}
 	c.storage = storage
 
-	if c.CacheSize > 0 {
-		cache, err := lru.New[string, *geoip2.City](c.CacheSize)
-		if err != nil {
-			return nil, err
-		}
-		c.cache = cache
+	err = c.setCache()
+	if err != nil {
+		return nil, fmt.Errorf("set cache: %w", err)
 	}
 
 	return c, nil
+}
+
+func (c *Cfg) setCache() error {
+	if c.CacheSize <= 0 {
+		return nil
+	}
+
+	cache, err := lru.New[string, *geoip2.City](c.CacheSize)
+	if err != nil {
+		return err
+	}
+
+	c.cache = cache
+	return nil
 }
 
 // GetHeaders returns sorted request headers excluding ignored values.
