@@ -35,12 +35,13 @@ jobs:
           install-go: false
           min-go-version: "1.23"
 
-      - name: Run Gosec Security Scanner
-        uses: securego/gosec@master
-        with:
-          args: ./...
-        env:
-          GOSECGOVERSION: "go1.23.0"
+# doesn't work with go 1.23
+#      - name: Run Gosec Security Scanner
+#        uses: securego/gosec@master
+#        with:
+#          args: ./...
+#        env:
+#          GOSECGOVERSION: "go1.23.0"
 
       - name: Run govulncheck
         uses: golang/govulncheck-action@v1
