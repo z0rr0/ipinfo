@@ -5,7 +5,7 @@ ARG LDFLAGS
 WORKDIR /go/src/github.com/z0rr0/ipinfo
 COPY . .
 RUN echo "LDFLAGS = $LDFLAGS"
-RUN GOOS=linux go build -ldflags "$LDFLAGS" -o ./ipinfo
+RUN GOOS=linux GOARCH=amd64 go build -ldflags "$LDFLAGS" -o ./ipinfo
 
 FROM alpine:3.21
 LABEL org.opencontainers.image.authors="me@axv.email" \
