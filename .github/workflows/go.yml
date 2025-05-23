@@ -21,7 +21,7 @@ jobs:
           check-latest: true
 
       - name: Test
-        run: make test
+        run: make gh
 
       - name: Run golangci-lint
         uses: golangci/golangci-lint-action@v3
