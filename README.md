@@ -4,13 +4,15 @@
 ![Version](https://img.shields.io/github/tag/z0rr0/ipinfo.svg)
 ![License](https://img.shields.io/github/license/z0rr0/ipinfo.svg)
 
-IP info web service. It handles 4 requests:
+IP info web service. It handles next requests:
 
 1. default - plain text info about request IP
 2. `/short` - short info about request IP
 3. `/json` - json info about request IP
 4. `/xml` - json info about request IP
 5. `/html` - html info about request IP
+
+Examples are in the file [api.md](api.md).
 
 ![example](example.png)
 
