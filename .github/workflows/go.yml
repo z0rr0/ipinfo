@@ -24,9 +24,9 @@ jobs:
         run: make gh
 
       - name: Run golangci-lint
-        uses: golangci/golangci-lint-action@v3
+        uses: golangci/golangci-lint-action@v8
         with:
-          version: v2.1.6
+          version: v2.1
 
       - name: Run staticcheck
         uses: dominikh/staticcheck-action@v1
