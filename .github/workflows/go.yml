@@ -17,7 +17,7 @@ jobs:
       - name: Set up Go
         uses: actions/setup-go@v4
         with:
-          go-version: "1.23.4"
+          go-version: "1.24.3"
           check-latest: true
 
       - name: Test
@@ -26,14 +26,13 @@ jobs:
       - name: Run golangci-lint
         uses: golangci/golangci-lint-action@v3
         with:
-          version: v1.61.0
+          version: v2.1.6
 
       - name: Run staticcheck
-        uses: dominikh/staticcheck-action@v1.3.1
+        uses: dominikh/staticcheck-action@v1
         with:
-          version: "2024.1.1"
           install-go: false
-          min-go-version: "1.23.4"
+          min-go-version: "1.24"
 
       - name: Run Gosec Security Scanner
         uses: securego/gosec@master
@@ -43,5 +42,5 @@ jobs:
       - name: Run govulncheck
         uses: golang/govulncheck-action@v1
         with:
-          go-version-input: "1.23.4"
+          go-version-input: "1.24"
           go-package: ./...

@@ -1,4 +1,4 @@
-// Copyright 2024 Aleksandr Zaitsev <me@axv.email>.
+// Copyright 2025 Aleksandr Zaitsev <me@axv.email>.
 // All rights reserved. Use of this source code is governed
 // by a BSD-style license that can be found in the LICENSE file.
 
@@ -25,26 +25,25 @@ import (
 )
 
 const (
-	// Name is a program name
+	// Name is a program name.
 	Name = "IPINFO"
-	// Config is default configuration file name
+	// Config is default configuration file name.
 	Config  = "config.json"
 	timeout = 30 * time.Second
 )
 
 var (
-	// Version is program git version
-	Version = ""
-	// Revision is revision number
-	Revision = ""
-	// BuildDate is build date
-	BuildDate = ""
-	// GoVersion is runtime Go language version
-	GoVersion = runtime.Version()
+	// Version is program git version.
+	Version = "" //nolint:gochecknoglobals
+	// Revision is revision number.
+	Revision = "" //nolint:gochecknoglobals
+	// BuildDate is build date.
+	BuildDate = "" //nolint:gochecknoglobals
+	// GoVersion is runtime Go language version.
+	GoVersion = runtime.Version() //nolint:gochecknoglobals
 
-	// internal logger
-	loggerInfo = log.New(os.Stdout, fmt.Sprintf("INFO [%v]: ", Name),
-		log.Ldate|log.Ltime|log.Lshortfile)
+	// internal logger.
+	loggerInfo = log.New(os.Stdout, fmt.Sprintf("INFO [%v]: ", Name), log.Ldate|log.Ltime|log.Lshortfile) //nolint:gochecknoglobals
 )
 
 func main() {
@@ -59,7 +58,7 @@ func main() {
 
 	buildInfo := &handle.BuildInfo{Version: Version, Revision: Revision, BuildDate: BuildDate, GoVersion: GoVersion}
 	if *version {
-		fmt.Println(buildInfo.String())
+		fmt.Println(buildInfo.String()) //nolint:forbidigo
 		return
 	}
 

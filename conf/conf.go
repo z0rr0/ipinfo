@@ -1,4 +1,4 @@
-// Copyright 2023 Aleksandr Zaitsev <me@axv.email>.
+// Copyright 2025 Aleksandr Zaitsev <me@axv.email>.
 // All rights reserved. Use of this source code is governed
 // by a BSD-style license that can be found in the LICENSE file.
 
@@ -14,6 +14,7 @@ import (
 	"os"
 	"path/filepath"
 	"sort"
+	"strconv"
 	"strings"
 	"time"
 
@@ -25,15 +26,15 @@ const defaultISOCode = "en"
 
 // Cfg is configuration settings struct.
 type Cfg struct {
-	Host           string              `json:"host"`
-	Port           uint                `json:"port"`
-	Db             string              `json:"db"`
-	IgnoreHeaders  []string            `json:"ignore_headers"`
-	IPHeader       string              `json:"ip_header"`
-	CacheSize      int                 `json:"cache_size"`
-	ignoredHeaders map[string]struct{} // ignored header map
+	ignoredHeaders map[string]struct{}
 	storage        *geoip2.Reader
 	cache          *lru.Cache[string, *geoip2.City]
+	Host           string   `json:"host"`
+	Db             string   `json:"db"`
+	IPHeader       string   `json:"ip_header"`
+	IgnoreHeaders  []string `json:"ignore_headers"`
+	Port           uint     `json:"port"`
+	CacheSize      int      `json:"cache_size"`
 }
 
 // StrParam is common struct for headers and form params.
@@ -44,15 +45,15 @@ type StrParam struct {
 
 // IPInfo is IP and related info for response.
 type IPInfo struct {
-	IP        string    `xml:"ip" json:"ip"`
-	Country   string    `xml:"country" json:"country"`
-	City      string    `xml:"city" json:"city"`
-	Longitude float64   `xml:"longitude" json:"longitude"`
-	Latitude  float64   `xml:"latitude" json:"latitude"`
-	UTCTime   string    `xml:"utc_time" json:"utc_time"`
-	TimeZone  string    `xml:"time_zone" json:"time_zone"`
-	Language  string    `xml:"language" json:"language"`
-	Timestamp time.Time `xml:"-" json:"-"`
+	Timestamp time.Time `json:"-"         xml:"-"`
+	IP        string    `json:"ip"        xml:"ip"`
+	Country   string    `json:"country"   xml:"country"`
+	City      string    `json:"city"      xml:"city"`
+	UTCTime   string    `json:"utc_time"  xml:"utc_time"`
+	TimeZone  string    `json:"time_zone" xml:"time_zone"`
+	Language  string    `json:"language"  xml:"language"`
+	Longitude float64   `json:"longitude" xml:"longitude"`
+	Latitude  float64   `json:"latitude"  xml:"latitude"`
 }
 
 // LocalTime returns local time in RFC3339 format or "-" if error.
@@ -120,7 +121,7 @@ func (c *Cfg) Info(r *http.Request) (*IPInfo, error) {
 
 // Addr returns service's net address.
 func (c *Cfg) Addr() string {
-	return net.JoinHostPort(c.Host, fmt.Sprint(c.Port))
+	return net.JoinHostPort(c.Host, strconv.FormatUint(uint64(c.Port), 10))
 }
 
 // GetIP return string IP address.
@@ -197,20 +198,6 @@ func New(filename string) (*Cfg, error) {
 	return c, nil
 }
 
-func (c *Cfg) setCache() error {
-	if c.CacheSize <= 0 {
-		return nil
-	}
-
-	cache, err := lru.New[string, *geoip2.City](c.CacheSize)
-	if err != nil {
-		return err
-	}
-
-	c.cache = cache
-	return nil
-}
-
 // GetHeaders returns sorted request headers excluding ignored values.
 func (c *Cfg) GetHeaders(r *http.Request) []StrParam {
 	result := make([]StrParam, 0, len(r.Header))
@@ -239,6 +226,20 @@ func (c *Cfg) GetParams(r *http.Request) []StrParam {
 	return result
 }
 
+func (c *Cfg) setCache() error {
+	if c.CacheSize <= 0 {
+		return nil
+	}
+
+	cache, err := lru.New[string, *geoip2.City](c.CacheSize)
+	if err != nil {
+		return err
+	}
+
+	c.cache = cache
+	return nil
+}
+
 func readConfig(filename string) ([]byte, error) {
 	const (
 		dockerDir  = "/data/conf"
@@ -253,11 +254,10 @@ func readConfig(filename string) ([]byte, error) {
 	cleanPath := filepath.Clean(strings.Trim(filename, " "))
 
 	if filepath.IsAbs(cleanPath) {
-		if !(cleanPath == testConfig || strings.HasPrefix(cleanPath, dockerDir) || strings.HasPrefix(cleanPath, currentDir)) {
+		if cleanPath != testConfig && !strings.HasPrefix(cleanPath, dockerDir) && !strings.HasPrefix(cleanPath, currentDir) {
 			return nil, fmt.Errorf("file %q has relative path and not in the allowed directories", cleanPath)
 		}
 	} else {
-
 		cleanPath = filepath.Join(currentDir, cleanPath)
 	}
 

@@ -29,10 +29,10 @@ check_fmt:
 
 lint: check_fmt
 	go vet $(PWD)/...
-	-golangci-lint run $(PWD)/...
-	-staticcheck ./...
-	-govulncheck ./...
-	-gosec ./...
+	@go tool golangci-lint run -c $(PWD)/golangci.yml $(PWD)/...
+	@go tool govulncheck $(PWD)/...
+	@go tool staticcheck $(PWD)/...
+	@go tool gosec $(PWD)/...
 
 prepare:
 	@-cp -f $(CONFIG) $(TEST_CONFIG)
@@ -50,8 +50,16 @@ docker_linux_amd64: lint clean
 	docker buildx build --platform linux/amd64 --build-arg LDFLAGS="$(LDFLAGS)" -t $(DOCKER_TAG) .
 
 clean:
-	rm -f $(PWD)/$(TARGET)
+	rm -f $(PWD)/$(TARGET) $(TEST_CONFIG) $(TEST_STORAGE)
 	find ./ -type f -name "*.out" -delete
+
+tools:
+	@go get -tool github.com/golangci/golangci-lint/v2/cmd/golangci-lint@v2.1.6
+	@go get -tool github.com/4meepo/tagalign/cmd/tagalign@latest
+	@go get -tool golang.org/x/tools/go/analysis/passes/fieldalignment/cmd/fieldalignment@latest
+	@go get -tool github.com/securego/gosec/v2/cmd/gosec@latest
+	@go get -tool honnef.co/go/tools/cmd/staticcheck@latest
+	@go get -tool golang.org/x/vuln/cmd/govulncheck@latest
 
 start: build
 	@echo "  >  $(TARGET)"

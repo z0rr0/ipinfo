@@ -78,9 +78,9 @@ func TestCfg_GetIP(t *testing.T) {
 	cases := []struct {
 		name       string
 		ipHeader   string
-		ipValues   []string
 		remoteAddr string
-		ipAddress  string // error if empty
+		ipAddress  string
+		ipValues   []string
 	}{
 		{
 			name:     "has header, no values",

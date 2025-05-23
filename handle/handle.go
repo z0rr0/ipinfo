@@ -1,3 +1,8 @@
+// Copyright 2025 Aleksandr Zaitsev <me@axv.email>.
+// All rights reserved. Use of this source code is governed
+// by a BSD-style license that can be found in the LICENSE file.
+
+// Package handle contains methods and structures for HTTP handlers.
 package handle
 
 import (
@@ -14,11 +19,11 @@ import (
 var (
 	//go:embed index.html
 	htmlIndex    string
-	htmlTemplate = template.Must(template.New("index").Parse(htmlIndex))
+	htmlTemplate = template.Must(template.New("index").Parse(htmlIndex)) //nolint:gochecknoglobals
 
 	//go:embed full.html
 	htmlFull         string
-	htmlFullTemplate = template.Must(template.New("full").Parse(htmlFull))
+	htmlFullTemplate = template.Must(template.New("full").Parse(htmlFull)) //nolint:gochecknoglobals
 )
 
 // BuildInfo is a struct for version information.
