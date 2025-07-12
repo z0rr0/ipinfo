@@ -1,4 +1,4 @@
-ARG GOLANG_VERSION="1.24.4"
+ARG GOLANG_VERSION="1.24.5"
 
 FROM golang:${GOLANG_VERSION}-alpine AS builder
 ARG LDFLAGS
@@ -7,7 +7,7 @@ COPY . .
 RUN echo "LDFLAGS = $LDFLAGS"
 RUN GOOS=linux GOARCH=amd64 go build -ldflags "$LDFLAGS" -o ./ipinfo
 
-FROM alpine:3.21
+FROM alpine:3.22
 LABEL org.opencontainers.image.authors="me@axv.email" \
         org.opencontainers.image.url="https://hub.docker.com/r/z0rr0/ipinfo" \
         org.opencontainers.image.documentation="https://github.com/z0rr0/ipinfo" \
