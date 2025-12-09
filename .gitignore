@@ -13,6 +13,6 @@
 config.local.json
 ipinfo.json
 ipinfo
-local_storage/*
+local/*
 db/*
 docker_upload.sh

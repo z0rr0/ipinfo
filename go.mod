@@ -2,7 +2,7 @@ module github.com/z0rr0/ipinfo
 
 go 1.25
 
-toolchain go1.25.4
+toolchain go1.25.5
 
 require (
 	github.com/hashicorp/golang-lru/v2 v2.0.7

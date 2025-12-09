@@ -10,7 +10,9 @@ import (
 	"errors"
 	"flag"
 	"fmt"
+	"io"
 	"log"
+	"log/slog"
 	"net/http"
 	"os"
 	"os/signal"
@@ -75,6 +77,7 @@ func main() {
 		MaxHeaderBytes: 1 << 20, // 1MB
 		ErrorLog:       loggerInfo,
 	}
+	initLogger(true, os.Stdout)
 	loggerInfo.Printf("\n%v\nlisten addr: %v\n", buildInfo.String(), srv.Addr)
 
 	handlers := map[string]func(http.ResponseWriter, *conf.IPInfo, *handle.BuildInfo) error{
@@ -137,4 +140,15 @@ func main() {
 		loggerInfo.Printf("cfg close error: %v\n", err)
 	}
 	loggerInfo.Println("stopped")
+}
+
+// initLogger initializes logger with debug mode and writer.
+func initLogger(debug bool, w io.Writer) {
+	var level = slog.LevelInfo
+
+	if debug {
+		level = slog.LevelDebug
+	}
+
+	slog.SetDefault(slog.New(slog.NewTextHandler(w, &slog.HandlerOptions{Level: level})))
 }

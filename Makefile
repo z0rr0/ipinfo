@@ -7,6 +7,8 @@ VERSION=$(firstword $(COMMIT))
 LDFLAGS=-X main.Version=$(TAG) -X main.Revision=git:$(VERSION) -X main.BuildDate=$(TS)
 DOCKER_TAG=z0rr0/ipinfo
 
+# local config for development and testing
+#CONFIG=local/config.json
 CONFIG=config.example.json
 TEST_CONFIG=/tmp/ipinfo_test.json
 TEST_STORAGE=/tmp/GeoLite2-City.mmdb

@@ -11,6 +11,7 @@ import (
 	"encoding/xml"
 	"fmt"
 	"html/template"
+	"log/slog"
 	"net/http"
 
 	"github.com/z0rr0/ipinfo/conf"
@@ -99,10 +100,19 @@ func XMLHandler(w http.ResponseWriter, info *conf.IPInfo, _ *BuildInfo) error {
 	w.Header().Set("Content-Type", "application/xml; charset=utf-8")
 	w.Header().Set("Cache-Control", "no-cache, no-store, must-revalidate")
 
-	if err := printF(nil, w, xml.Header); err != nil {
+	err := printF(nil, w, xml.Header)
+	if err != nil {
 		return fmt.Errorf("XMLHandler: %w", err)
 	}
-	return xml.NewEncoder(w).Encode(&XMLInfo{IPInfo: *info})
+	encoder := xml.NewEncoder(w)
+
+	if err = encoder.Encode(&XMLInfo{IPInfo: *info}); err != nil {
+		return fmt.Errorf("XMLHandler: %w", err)
+	}
+	if err = encoder.Close(); err != nil {
+		slog.Error("XMLHandler: encoder close", "error", err)
+	}
+	return nil
 }
 
 // HTMLHandler is handler for text/html response.
