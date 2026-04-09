@@ -9,7 +9,7 @@ import (
 )
 
 // printF is fmt.Fprintf wrapper with error check.
-func printF(err error, w io.Writer, format string, a ...interface{}) error {
+func printF(err error, w io.Writer, format string, a ...any) error {
 	if err != nil {
 		return err
 	}

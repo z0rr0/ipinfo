@@ -215,7 +215,7 @@ func (c *Cfg) GetHeaders(r *http.Request) []StrParam {
 
 // GetParams returns sorted request parameters.
 func (c *Cfg) GetParams(r *http.Request) []StrParam {
-	result := make([]StrParam, 0)
+	result := make([]StrParam, 0, len(r.Form))
 	r.FormValue("test") // init form load
 	for k, v := range r.Form {
 		result = append(result, StrParam{k, strings.Join(v, "; ")})

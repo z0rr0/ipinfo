@@ -45,8 +45,8 @@ func (b *BuildInfo) String() string {
 
 // XMLInfo is a struct for application/xml response data.
 type XMLInfo struct {
-	XMLName xml.Name `xml:"ipinfo"`
-	conf.IPInfo
+	XMLName     xml.Name `xml:"ipinfo"`
+	conf.IPInfo          //nolint:embeddedstructfieldcheck
 }
 
 // TextHandler is handler for text/plain response.

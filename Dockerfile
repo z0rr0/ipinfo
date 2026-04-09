@@ -1,4 +1,4 @@
-ARG GOLANG_VERSION="1.25.5"
+ARG GOLANG_VERSION="1.26.2"
 
 FROM golang:${GOLANG_VERSION}-alpine AS builder
 WORKDIR /go/src/github.com/z0rr0/ipinfo
