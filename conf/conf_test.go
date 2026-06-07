@@ -128,6 +128,31 @@ func TestCfg_GetIP(t *testing.T) {
 	}
 }
 
+func TestCfg_replaceInternal(t *testing.T) {
+	const itself = "8.8.8.8"
+	cases := []struct {
+		name     string
+		ipItself string
+		host     string
+		expected string
+	}{
+		{name: "disabled, private host", host: "172.17.0.5", expected: "172.17.0.5"},
+		{name: "private docker", ipItself: itself, host: "172.17.0.5", expected: itself},
+		{name: "private class A", ipItself: itself, host: "10.0.0.3", expected: itself},
+		{name: "private class C", ipItself: itself, host: "192.168.1.2", expected: itself},
+		{name: "loopback", ipItself: itself, host: "127.0.0.1", expected: itself},
+		{name: "public unchanged", ipItself: itself, host: "193.138.218.226", expected: "193.138.218.226"},
+		{name: "unparseable unchanged", ipItself: itself, host: "not an ip", expected: "not an ip"},
+	}
+
+	for _, c := range cases {
+		cfg := &Cfg{IPItself: c.ipItself}
+		if result := cfg.replaceInternal(c.host); result != c.expected {
+			t.Errorf("%s: not equal %v != %v", c.name, result, c.expected)
+		}
+	}
+}
+
 func TestCfg_GetHeaders(t *testing.T) {
 	cfg, err := New(testConfigName)
 	if err != nil {

@@ -32,6 +32,7 @@ type Cfg struct {
 	Host           string   `json:"host"`
 	Db             string   `json:"db"`
 	IPHeader       string   `json:"ip_header"`
+	IPItself       string   `json:"ip_itself"`
 	IgnoreHeaders  []string `json:"ignore_headers"`
 	Port           uint     `json:"port"`
 	CacheSize      int      `json:"cache_size"`
@@ -131,11 +132,13 @@ func (c *Cfg) GetIP(r *http.Request) (string, error) {
 		if err != nil {
 			return "", err
 		}
-		return host, nil
+		return c.replaceInternal(host), nil
 	}
+
 	if values, ok := r.Header[c.IPHeader]; ok {
-		return values[0], nil
+		return c.replaceInternal(values[0]), nil
 	}
+
 	return "", errors.New("no real ip header")
 }
 
@@ -224,6 +227,20 @@ func (c *Cfg) GetParams(r *http.Request) []StrParam {
 		return result[i].Name < result[j].Name
 	})
 	return result
+}
+
+// replaceInternal returns IPItself for internal (docker/same-host) private or
+// loopback addresses when IPItself is configured; otherwise returns host unchanged.
+func (c *Cfg) replaceInternal(host string) string {
+	if c.IPItself == "" {
+		return host
+	}
+
+	if ip := net.ParseIP(host); ip != nil && (ip.IsPrivate() || ip.IsLoopback()) {
+		return c.IPItself
+	}
+
+	return host
 }
 
 func (c *Cfg) setCache() error {

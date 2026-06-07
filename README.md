@@ -51,6 +51,13 @@ For docker container
 docker run --rm --name ipinfo -u $UID:$UID -p 8082:8082 -v /mydir:/data/conf:ro z0rr0/ipinfo:latest
 ```
 
+### Configuration
+
+See [config.example.json](config.example.json). Optional field `ip_itself`: when set,
+requests coming from an internal private or loopback address (e.g. another docker
+container on the same host) have their IP replaced by this value before geolocation,
+so they report the host's real public IP. Leave it empty to disable.
+
 ### License
 
 This source code is governed by a [BSD 3-Clause](https://opensource.org/licenses/BSD-3-Clause) 
