@@ -1,0 +1,23 @@
+# Local mmdb databases and configs, ~126 MB of build context the image never uses.
+db/
+local/
+*.mmdb
+
+.git/
+.github/
+.idea/
+.junie/
+
+# Built binary and test artifacts
+ipinfo
+*.out
+*.test
+
+docker-compose.yml
+Dockerfile
+Makefile
+README.md
+AGENTS.md
+CLAUDE.md
+api.md
+example.png

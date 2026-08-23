@@ -3,7 +3,7 @@
 version: "2"
 
 run:
-    go: "1.26"
+    go: "1.27"
     timeout: 3m
     tests: false
 
@@ -12,8 +12,16 @@ linters:
     disable:
         - depguard
         - err113
+        # A major rename keeps the old name as a deprecated alias and ships the
+        # new one as a separate linter, which `default: all` switches back on by
+        # itself. Both names stay listed, as for wsl/wsl_v5 below.
         - exhaustruct
+        - exhaustruct_v5
         - godox
+        # Deprecated alias of gomodguard_v2; only the alias is disabled, to
+        # silence its warning. gomodguard_v2 stays enabled and, with no
+        # allow/block list configured, never fires — as gomodguard did before.
+        - gomodguard
         - mnd
         - nilnil
         - nlreturn

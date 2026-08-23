@@ -1,0 +1,21 @@
+services:
+  ipinfo:
+    image: z0rr0/ipinfo:latest
+    container_name: ipinfo
+    user: "1000:1000"
+    ports:
+      - "8082:8082"
+    # ./data must hold ipinfo.json and GeoLite2-City.mmdb. In that config set
+    # "host": "0.0.0.0" (127.0.0.1 is unreachable through the published port)
+    # and "db": "/data/conf/GeoLite2-City.mmdb".
+    volumes:
+      - ./data:/data/conf:ro
+    restart: unless-stopped
+    logging:
+      options:
+        max-size: "5m"
+        max-file: "2"
+    deploy:
+      resources:
+        limits:
+          memory: 64m

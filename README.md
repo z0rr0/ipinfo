@@ -28,9 +28,12 @@ make build
 For docker container [z0rr0/ipinfo](https://hub.docker.com/r/z0rr0/ipinfo)
 
 ```bash
+# build the image for the host architecture
 make docker
-# or only for linux amd64
-# make docker_linux_amd64
+
+# build linux/amd64 + linux/arm64 and push them to Docker Hub,
+# tagged as latest and as the current git tag
+make docker-push
 ```
 
 ### Local run
@@ -50,6 +53,18 @@ For docker container
 # mydir/GeoLite2-City.mmdb
 docker run --rm --name ipinfo -u $UID:$UID -p 8082:8082 -v /mydir:/data/conf:ro z0rr0/ipinfo:latest
 ```
+
+Or with [docker-compose.yml](docker-compose.yml), which mounts `./data` as `/data/conf`:
+
+```bash
+# data/ipinfo.json
+# data/GeoLite2-City.mmdb
+docker compose up -d
+docker compose down
+```
+
+The config inside the container needs `"host": "0.0.0.0"` (`127.0.0.1` is not
+reachable through the published port) and `"db": "/data/conf/GeoLite2-City.mmdb"`.
 
 ### Configuration
 

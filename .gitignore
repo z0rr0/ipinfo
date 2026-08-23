@@ -16,3 +16,6 @@ ipinfo
 local/*
 db/*
 docker_upload.sh
+
+# docker-compose.yml working directory
+/data/
