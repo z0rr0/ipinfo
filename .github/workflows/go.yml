@@ -41,10 +41,13 @@ jobs:
                   install-go: false
                   min-go-version: "1.27"
 
+            # Not the securego/gosec docker action: it runs in a container with
+            # its own Go (1.26.5 at the time of writing), while setup-go exports
+            # GOTOOLCHAIN=local — so `go 1.27` in go.mod makes it fail to load the
+            # packages. Running gosec with the Go installed above keeps a single
+            # toolchain across every step, and pins it instead of tracking master.
             - name: Run Gosec Security Scanner
-              uses: securego/gosec@master
-              with:
-                  args: ./...
+              run: go run github.com/securego/gosec/v2/cmd/gosec@v2.28.0 ./...
 
             - name: Run govulncheck
               uses: golang/govulncheck-action@v1
