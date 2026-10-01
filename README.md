@@ -11,6 +11,7 @@ IP info web service. It handles next requests:
 3. `/json` - json info about request IP
 4. `/xml` - json info about request IP
 5. `/html` - html info about request IP
+6. `/health` - liveness check, returns `OK` without GeoIP lookup
 
 Examples are in the file [api.md](api.md).
 
@@ -65,6 +66,9 @@ docker compose down
 
 The config inside the container needs `"host": "0.0.0.0"` (`127.0.0.1` is not
 reachable through the published port) and `"db": "/data/conf/GeoLite2-City.mmdb"`.
+
+The compose service has a healthcheck that requests `/health` on port `8082`;
+keep it in sync with `port` in `data/ipinfo.json`.
 
 ### Configuration
 

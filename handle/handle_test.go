@@ -478,3 +478,33 @@ func TestFullHTMLHandler(t *testing.T) {
 		}
 	}
 }
+
+func TestHealthHandler(t *testing.T) {
+	w := httptest.NewRecorder()
+	if err := HealthHandler(w); err != nil {
+		t.Fatal(err)
+	}
+
+	resp := w.Result()
+	if resp.StatusCode != http.StatusOK {
+		t.Errorf("not %d status code: %v", http.StatusOK, resp.StatusCode)
+	}
+
+	if ct := resp.Header.Get("Content-Type"); ct != "text/plain; charset=utf-8" {
+		t.Errorf("not equal Content-Type: %v", ct)
+	}
+	checkNoCache(t, resp)
+
+	body, err := io.ReadAll(resp.Body)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	if strBody := string(body); strBody != "OK\n" {
+		t.Errorf("not equal body: %q", strBody)
+	}
+
+	if err = resp.Body.Close(); err != nil {
+		t.Error(err)
+	}
+}

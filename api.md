@@ -27,7 +27,8 @@ Returns IP information in enhanced HTML format.
 Returns application version information.
 
 ### GET /health
-Returns application health status.
+Returns application health status. It is a liveness check: no GeoIP lookup,
+the `ip_header` request header is not required, requests are not written to the access log.
 
 ## Response Format
 
@@ -43,3 +44,13 @@ Returns application health status.
   "time_zone": "America/New_York",
   "language": "en"
 }
+```
+
+### Health Response
+```
+HTTP/1.1 200 OK
+Content-Type: text/plain; charset=utf-8
+Cache-Control: no-cache, no-store, must-revalidate
+
+OK
+```

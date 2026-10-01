@@ -139,3 +139,11 @@ func VersionHandler(w http.ResponseWriter, _ *conf.IPInfo, buildInfo *BuildInfo)
 	err = printF(err, w, "Go version: %v\n", buildInfo.GoVersion)
 	return printF(err, w, "Build date: %v\n", buildInfo.BuildDate)
 }
+
+// HealthHandler is handler for liveness check.
+// It doesn't use the GeoIP database and the client IP.
+func HealthHandler(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "text/plain; charset=utf-8")
+	w.Header().Set("Cache-Control", "no-cache, no-store, must-revalidate")
+	return printF(nil, w, "OK\n")
+}

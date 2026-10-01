@@ -80,44 +80,8 @@ func main() {
 	initLogger(true, os.Stdout)
 	loggerInfo.Printf("\n%v\nlisten addr: %v\n", buildInfo.String(), srv.Addr)
 
-	handlers := map[string]func(http.ResponseWriter, *conf.IPInfo, *handle.BuildInfo) error{
-		"/short":   handle.TextShortHandler,
-		"/compact": handle.TextCompactHandler,
-		"/json":    handle.JSONHandler,
-		"/xml":     handle.XMLHandler,
-		"/html":    handle.HTMLHandler,
-		"/full":    handle.FullHTMLHandler,
-		"/version": handle.VersionHandler,
-	}
+	http.Handle("/", newHandler(cfg, buildInfo))
 
-	http.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
-		start, code := time.Now(), http.StatusOK
-		defer func() {
-			loggerInfo.Printf("%-5v %v\t%-12v\t%v",
-				r.Method, code, time.Since(start), r.RemoteAddr,
-			)
-		}()
-
-		info, e := cfg.Info(r)
-		if e != nil {
-			loggerInfo.Println(e)
-			http.Error(w, "ERROR", http.StatusInternalServerError)
-			return
-		}
-
-		url := strings.TrimRight(r.URL.Path, "/ ")
-		if h, ok := handlers[url]; ok {
-			e = h(w, info, buildInfo)
-		} else {
-			e = handle.TextHandler(w, r, cfg, info)
-		}
-
-		if e != nil {
-			loggerInfo.Println(e)
-			http.Error(w, "ERROR", http.StatusInternalServerError)
-			code = http.StatusInternalServerError
-		}
-	})
 	idleConnsClosed := make(chan struct{})
 	go func() {
 		sigint := make(chan os.Signal, 1)
@@ -140,6 +104,56 @@ func main() {
 		loggerInfo.Printf("cfg close error: %v\n", err)
 	}
 	loggerInfo.Println("stopped")
+}
+
+// newHandler returns the HTTP handler that routes requests by the trimmed URL path.
+// "/health" is served before the client IP lookup and is not written to the access log.
+func newHandler(cfg *conf.Cfg, buildInfo *handle.BuildInfo) http.Handler {
+	handlers := map[string]func(http.ResponseWriter, *conf.IPInfo, *handle.BuildInfo) error{
+		"/short":   handle.TextShortHandler,
+		"/compact": handle.TextCompactHandler,
+		"/json":    handle.JSONHandler,
+		"/xml":     handle.XMLHandler,
+		"/html":    handle.HTMLHandler,
+		"/full":    handle.FullHTMLHandler,
+		"/version": handle.VersionHandler,
+	}
+
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		url := strings.TrimRight(r.URL.Path, "/ ")
+		if url == "/health" {
+			if e := handle.HealthHandler(w); e != nil {
+				loggerInfo.Println(e)
+			}
+			return
+		}
+
+		start, code := time.Now(), http.StatusOK
+		defer func() {
+			loggerInfo.Printf("%-5v %v\t%-12v\t%v",
+				r.Method, code, time.Since(start), r.RemoteAddr,
+			)
+		}()
+
+		info, e := cfg.Info(r)
+		if e != nil {
+			loggerInfo.Println(e)
+			http.Error(w, "ERROR", http.StatusInternalServerError)
+			return
+		}
+
+		if h, ok := handlers[url]; ok {
+			e = h(w, info, buildInfo)
+		} else {
+			e = handle.TextHandler(w, r, cfg, info)
+		}
+
+		if e != nil {
+			loggerInfo.Println(e)
+			http.Error(w, "ERROR", http.StatusInternalServerError)
+			code = http.StatusInternalServerError
+		}
+	})
 }
 
 // initLogger initializes logger with debug mode and writer.
