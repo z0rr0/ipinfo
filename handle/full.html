@@ -51,11 +51,12 @@
     </table>
   </div>
   <div>
-    <span><a href="./json">json</a></span>
-    <span><a href="./xml">xml</a></span>
-    <span><a href="/">plain</a></span>
-    <span><a href="/short">short</a></span>
-    <span><a href="/ip">ip</a></span>
+    {{- $q := "" }}{{ if .FromParam }}{{ $q = printf "?ip=%s" .IP }}{{ end }}
+    <span><a href="/json{{ $q }}">json</a></span>
+    <span><a href="/xml{{ $q }}">xml</a></span>
+    <span><a href="/{{ $q }}">plain</a></span>
+    <span><a href="/short{{ $q }}">short</a></span>
+    <span><a href="/ip{{ $q }}">ip</a></span>
     <span><a href="/version"><small>version</small></a></span>
   </div>
 </main>

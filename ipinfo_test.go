@@ -54,6 +54,12 @@ func TestNewHandler(t *testing.T) {
 		{name: "ip_param", path: "/ip?ip=8.8.8.8", code: http.StatusOK, contentType: "text/plain; charset=utf-8", body: "8.8.8.8\n"},
 		{name: "json_bad_param", path: "/json?ip=bad", code: http.StatusBadRequest, body: "invalid ip parameter\n"},
 		{name: "health_bad_param", path: "/health?ip=bad", code: http.StatusOK, body: "OK\n"},
+		{name: "version_no_ip", path: "/version", code: http.StatusOK, contentType: "text/plain; charset=utf-8", contains: "Version:"},
+		{name: "version_bad_param", path: "/version?ip=bad", code: http.StatusOK, contains: "Version:"},
+		{
+			name: "full_param", path: "/full?ip=8.8.8.8", code: http.StatusOK,
+			contentType: "text/html; charset=utf-8", contains: `href="/json?ip=8.8.8.8"`,
+		},
 	}
 
 	for _, c := range cases {

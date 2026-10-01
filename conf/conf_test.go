@@ -165,20 +165,21 @@ func TestCfg_targetIP(t *testing.T) {
 		return url.Values{"ip": {v}}.Encode()
 	}
 	cases := []struct {
-		err      error
-		name     string
-		query    string
-		header   string
-		ipItself string
-		expected string
+		err       error
+		name      string
+		query     string
+		header    string
+		ipItself  string
+		expected  string
+		fromParam bool
 	}{
 		{name: "no parameter", header: header, expected: header},
-		{name: "parameter overrides header", query: encode("8.8.8.8"), header: header, expected: "8.8.8.8"},
-		{name: "parameter without header", query: encode("8.8.8.8"), expected: "8.8.8.8"},
-		{name: "ipv6", query: encode("2001:4860:4860:0:0:0:0:8888"), expected: "2001:4860:4860::8888"},
-		{name: "ipv4-mapped ipv6", query: encode("::ffff:8.8.8.8"), expected: "8.8.8.8"},
+		{name: "parameter overrides header", query: encode("8.8.8.8"), header: header, expected: "8.8.8.8", fromParam: true},
+		{name: "parameter without header", query: encode("8.8.8.8"), expected: "8.8.8.8", fromParam: true},
+		{name: "ipv6", query: encode("2001:4860:4860:0:0:0:0:8888"), expected: "2001:4860:4860::8888", fromParam: true},
+		{name: "ipv4-mapped ipv6", query: encode("::ffff:8.8.8.8"), expected: "8.8.8.8", fromParam: true},
 		{name: "empty parameter", query: "ip=", header: header, expected: header},
-		{name: "private not replaced", query: encode("192.168.1.2"), ipItself: itself, expected: "192.168.1.2"},
+		{name: "private not replaced", query: encode("192.168.1.2"), ipItself: itself, expected: "192.168.1.2", fromParam: true},
 		{name: "word", query: encode("abc"), err: ErrInvalidIP},
 		{name: "short ipv4", query: encode("1.2.3"), err: ErrInvalidIP},
 		{name: "list", query: encode("8.8.8.8, 1.1.1.1"), err: ErrInvalidIP},
@@ -193,7 +194,7 @@ func TestCfg_targetIP(t *testing.T) {
 			req.Header.Add("X-Real-Ip", c.header)
 		}
 
-		ip, err := cfg.targetIP(req)
+		ip, fromParam, err := cfg.targetIP(req)
 		if c.err != nil {
 			if !errors.Is(err, c.err) {
 				t.Errorf("%s: expected error %v, got %v", c.name, c.err, err)
@@ -206,6 +207,9 @@ func TestCfg_targetIP(t *testing.T) {
 		}
 		if ip != c.expected {
 			t.Errorf("%s: not equal %v != %v", c.name, ip, c.expected)
+		}
+		if fromParam != c.fromParam {
+			t.Errorf("%s: fromParam %v != %v", c.name, fromParam, c.fromParam)
 		}
 	}
 }
@@ -333,7 +337,7 @@ func TestCfg_Info(t *testing.T) {
 		t.Fatalf("info error with ip parameter: %v", err)
 	}
 
-	expected.UTCTime, expected.Timestamp = info.UTCTime, info.Timestamp
+	expected.UTCTime, expected.Timestamp, expected.FromParam = info.UTCTime, info.Timestamp, true
 	if i := *info; i != expected {
 		t.Errorf("ip parameter: not equal %v != %v", i, expected)
 	}

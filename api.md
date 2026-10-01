@@ -3,41 +3,52 @@
 ## Endpoints
 
 ### GET /
-Returns detailed IP information in text format.
+
+Returns detailed IP information in text format. Any unknown path is handled the same way.
 
 ### GET /short
+
 Returns concise IP information in text format.
 
 ### GET /compact
+
 Returns minimal IP information in text format.
 
 ### GET /json
+
 Returns IP information in JSON format.
 
 ### GET /xml
+
 Returns IP information in XML format.
 
 ### GET /html
+
 Returns IP information in HTML format.
 
 ### GET /full
-Returns IP information in enhanced HTML format.
+
+Returns IP information in enhanced HTML format. Its links to other formats keep the `ip` query parameter.
 
 ### GET /ip
+
 Returns only the client IP address as a single text line.
 
 ### GET /version
-Returns application version information.
+
+Returns application version information. No GeoIP lookup, the `ip_header` request header is not required.
 
 ### GET /health
+
 Returns application health status. It is a liveness check: no GeoIP lookup,
 the `ip_header` request header is not required, requests are not written to the access log.
 
 ## Query Parameters
 
 ### ip
-Any endpoint except `/health` accepts `?ip=<address>` (IPv4 or IPv6) and returns info about
-this address instead of the client IP, e.g. `/json?ip=8.8.8.8`.
+
+Any endpoint except `/health` and `/version` accepts `?ip=<address>` (IPv4 or IPv6) and returns
+info about this address instead of the client IP, e.g. `/json?ip=8.8.8.8`.
 
 - The address is normalized: `/ip?ip=::ffff:8.8.8.8` returns `8.8.8.8`.
 - It takes priority over the client IP: the `ip_header` request header is not required,
@@ -50,21 +61,23 @@ this address instead of the client IP, e.g. `/json?ip=8.8.8.8`.
 ## Response Format
 
 ### JSON Response
+
 ```json
 {
-  "ip": "192.168.1.1",
-  "country": "United States",
-  "city": "New York",
-  "longitude": -74.0060,
-  "latitude": 40.7128,
-  "utc_time": "2023-01-01T12:00:00Z",
-  "time_zone": "America/New_York",
-  "language": "en"
+  "ip": "193.138.218.226",
+  "country": "Sweden",
+  "city": "Malmo",
+  "utc_time": "2026-10-01T11:24:54Z",
+  "time_zone": "Europe/Stockholm",
+  "language": "en",
+  "longitude": 12.9982,
+  "latitude": 55.6078
 }
 ```
 
 ### Health Response
-```
+
+```http
 HTTP/1.1 200 OK
 Content-Type: text/plain; charset=utf-8
 Cache-Control: no-cache, no-store, must-revalidate
@@ -73,7 +86,8 @@ OK
 ```
 
 ### Invalid ip Parameter Response
-```
+
+```http
 HTTP/1.1 400 Bad Request
 Content-Type: text/plain; charset=utf-8
 

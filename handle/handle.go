@@ -137,7 +137,8 @@ func FullHTMLHandler(w http.ResponseWriter, info *conf.IPInfo, _ *BuildInfo) err
 }
 
 // VersionHandler is handler for version information.
-func VersionHandler(w http.ResponseWriter, _ *conf.IPInfo, buildInfo *BuildInfo) error {
+// It doesn't use the GeoIP database and the client IP.
+func VersionHandler(w http.ResponseWriter, buildInfo *BuildInfo) error {
 	w.Header().Set("Content-Type", "text/plain; charset=utf-8")
 	w.Header().Set("Cache-Control", "no-cache, no-store, must-revalidate")
 

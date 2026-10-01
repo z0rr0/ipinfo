@@ -108,6 +108,7 @@ func main() {
 
 // newHandler returns the HTTP handler that routes requests by the trimmed URL path.
 // "/health" is served before the client IP lookup and is not written to the access log.
+// "/version" is served before the client IP lookup too, but it is written to the access log.
 func newHandler(cfg *conf.Cfg, buildInfo *handle.BuildInfo) http.Handler {
 	handlers := map[string]func(http.ResponseWriter, *conf.IPInfo, *handle.BuildInfo) error{
 		"/short":   handle.TextShortHandler,
@@ -117,7 +118,6 @@ func newHandler(cfg *conf.Cfg, buildInfo *handle.BuildInfo) http.Handler {
 		"/xml":     handle.XMLHandler,
 		"/html":    handle.HTMLHandler,
 		"/full":    handle.FullHTMLHandler,
-		"/version": handle.VersionHandler,
 	}
 
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
@@ -135,6 +135,15 @@ func newHandler(cfg *conf.Cfg, buildInfo *handle.BuildInfo) http.Handler {
 				r.Method, code, time.Since(start), r.RemoteAddr,
 			)
 		}()
+
+		if url == "/version" {
+			if e := handle.VersionHandler(w, buildInfo); e != nil {
+				loggerInfo.Println(e)
+				code = http.StatusInternalServerError
+				http.Error(w, "ERROR", code)
+			}
+			return
+		}
 
 		info, e := cfg.Info(r)
 		if e != nil {

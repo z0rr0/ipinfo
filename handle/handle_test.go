@@ -315,29 +315,10 @@ func TestHTMLHandler(t *testing.T) {
 }
 
 func TestVersionHandler(t *testing.T) {
-	cfg, err := conf.New(testConfigName)
-	if err != nil {
-		t.Fatal(err)
-	}
-	defer func() {
-		if closeErr := cfg.Close(); closeErr != nil {
-			t.Errorf("close error: %v", closeErr)
-		}
-	}()
-
-	req := httptest.NewRequest("GET", "https://example.com/foo", nil)
-	req.Header.Add("X-Real-Ip", "193.138.218.226")
-	req.Header.Add("X-Header-A", "a")
-
-	info, err := cfg.Info(req)
-	if err != nil {
-		t.Fatal(err)
-	}
-
 	w := httptest.NewRecorder()
 
 	buildInfo := &BuildInfo{Version: "v1.0", Revision: "git:abc", BuildDate: "2000-01-01", GoVersion: "go1.0"}
-	err = VersionHandler(w, info, buildInfo)
+	err := VersionHandler(w, buildInfo)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -476,6 +457,47 @@ func TestFullHTMLHandler(t *testing.T) {
 	for _, subStr := range expectedSubStrings {
 		if !strings.Contains(strBody, subStr) {
 			t.Fatalf("not found required sub-string: %v", subStr)
+		}
+	}
+}
+
+func TestFullHTMLLinks(t *testing.T) {
+	cases := []struct {
+		name     string
+		info     conf.IPInfo
+		expected []string
+	}{
+		{
+			name:     "client ip",
+			info:     conf.IPInfo{IP: "193.138.218.226"},
+			expected: []string{`href="/json"`, `href="/"`, `href="/version"`},
+		},
+		{
+			name: "ip parameter",
+			info: conf.IPInfo{IP: "8.8.8.8", FromParam: true},
+			expected: []string{
+				`href="/json?ip=8.8.8.8"`, `href="/xml?ip=8.8.8.8"`, `href="/?ip=8.8.8.8"`,
+				`href="/short?ip=8.8.8.8"`, `href="/ip?ip=8.8.8.8"`, `href="/version"`,
+			},
+		},
+		{
+			name:     "ipv6 parameter",
+			info:     conf.IPInfo{IP: "2001:4860:4860::8888", FromParam: true},
+			expected: []string{`href="/json?ip=2001:4860:4860::8888"`},
+		},
+	}
+
+	for _, c := range cases {
+		w := httptest.NewRecorder()
+		if err := FullHTMLHandler(w, &c.info, nil); err != nil {
+			t.Fatalf("%s: %v", c.name, err)
+		}
+
+		body := w.Body.String()
+		for _, subStr := range c.expected {
+			if !strings.Contains(body, subStr) {
+				t.Errorf("%s: not found required sub-string: %v", c.name, subStr)
+			}
 		}
 	}
 }

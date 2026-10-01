@@ -32,9 +32,9 @@ make docker / docker-push     # host-arch image / multi-arch push to Docker Hub
 
 - `ipinfo.go` — HTTP server, graceful shutdown. The router is built by `newHandler` (registered in
   `main()`): a `map[string]handler` keyed by the trimmed path (`/short`, `/compact`, `/ip`, `/json`,
-  `/xml`, `/html`, `/full`, `/version`); anything else goes to `handle.TextHandler`. `/health` is handled
-  first, bypassing `cfg.Info` (GeoIP lookup) and the access log. `Version`/`Revision`/`BuildDate`
-  are injected with `-ldflags -X`.
+  `/xml`, `/html`, `/full`); anything else goes to `handle.TextHandler`. `/health` is handled
+  first, bypassing `cfg.Info` (GeoIP lookup) and the access log. `/version` also bypasses `cfg.Info`,
+  but is written to the access log. `Version`/`Revision`/`BuildDate` are injected with `-ldflags -X`.
 - `conf/` — JSON config, client IP detection, GeoLite2 reader behind an optional LRU cache,
   and the `IPInfo` response model (struct tags drive JSON/XML output).
 - `handle/` — one handler per format; `index.html`/`full.html` are `//go:embed`-ed `html/template`s.
@@ -50,6 +50,8 @@ make docker / docker-push     # host-arch image / multi-arch push to Docker Hub
 - Query parameter `?ip=` (`Cfg.targetIP`) overrides the client IP for every format: `ip_header` is not
   required and `ip_itself` is not applied. An invalid value gives 400 (`conf.ErrInvalidIP`), an empty one
   falls back to the client IP, a pair with an invalid escape is silently dropped by `URL.Query()`.
+  `/health` and `/version` ignore it. `IPInfo.FromParam` (`json:"-"`) marks it, so the links of
+  `full.html` keep `?ip=`.
 - `cache_size <= 0` disables the LRU cache.
 - Time zones are embedded via the `time/tzdata` import; the Docker image has no tzdata.
 

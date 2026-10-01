@@ -58,6 +58,7 @@ type IPInfo struct {
 	Language  string    `json:"language"  xml:"language"`
 	Longitude float64   `json:"longitude" xml:"longitude"`
 	Latitude  float64   `json:"latitude"  xml:"latitude"`
+	FromParam bool      `json:"-"         xml:"-"` // IP is taken from the "ip" query parameter
 }
 
 // LocalTime returns local time in RFC3339 format or "-" if error.
@@ -93,7 +94,7 @@ func (i *IPInfo) Location() string {
 
 // Info returns base info about request.
 func (c *Cfg) Info(r *http.Request) (*IPInfo, error) {
-	host, err := c.targetIP(r)
+	host, fromParam, err := c.targetIP(r)
 	if err != nil {
 		return nil, err
 	}
@@ -119,6 +120,7 @@ func (c *Cfg) Info(r *http.Request) (*IPInfo, error) {
 		TimeZone:  city.Location.TimeZone,
 		Language:  isoCode,
 		Timestamp: utcNow,
+		FromParam: fromParam,
 	}
 	return &info, nil
 }
@@ -233,18 +235,20 @@ func (c *Cfg) GetParams(r *http.Request) []StrParam {
 }
 
 // targetIP returns the normalized "ip" query parameter when it is set, otherwise the client IP.
-func (c *Cfg) targetIP(r *http.Request) (string, error) {
+// The flag reports whether the IP is taken from the parameter.
+func (c *Cfg) targetIP(r *http.Request) (string, bool, error) {
 	value := r.URL.Query().Get("ip")
 	if value == "" {
-		return c.GetIP(r)
+		host, err := c.GetIP(r)
+		return host, false, err
 	}
 
 	ip := net.ParseIP(value)
 	if ip == nil {
-		return "", ErrInvalidIP
+		return "", false, ErrInvalidIP
 	}
 
-	return ip.String(), nil
+	return ip.String(), true, nil
 }
 
 // replaceInternal returns IPItself for internal (docker/same-host) private or

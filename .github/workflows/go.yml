@@ -15,12 +15,13 @@ jobs:
         timeout-minutes: 10
         steps:
             - name: Checkout repository
-              uses: actions/checkout@v6
+              uses: actions/checkout@v7
 
             - name: Set up Go
-              uses: actions/setup-go@v6
+              uses: actions/setup-go@v7
               with:
-                  go-version: "1.27.0"
+                  # the toolchain directive of go.mod, the same Go as in Dockerfile
+                  go-version-file: go.mod
                   cache: true
 
             - name: Check Go version
@@ -32,12 +33,13 @@ jobs:
             - name: Run golangci-lint
               uses: golangci/golangci-lint-action@v9
               with:
-                  version: v2.13.1
+                  version: v2.14.0
                   args: --config=golangci.yml --issues-exit-code=0
 
             - name: Run staticcheck
               uses: dominikh/staticcheck-action@v1
               with:
+                  version: "2026.2.1"
                   install-go: false
                   min-go-version: "1.27"
 
@@ -47,10 +49,14 @@ jobs:
             # packages. Running gosec with the Go installed above keeps a single
             # toolchain across every step, and pins it instead of tracking master.
             - name: Run Gosec Security Scanner
-              run: go run github.com/securego/gosec/v2/cmd/gosec@v2.28.0 ./...
+              run: go run github.com/securego/gosec/v2/cmd/gosec@v2.29.0 ./...
 
             - name: Run govulncheck
               uses: golang/govulncheck-action@v1
               with:
-                  go-version-input: "1.27"
+                  # The exact toolchain of go.mod: "1.27" takes the latest patch release and
+                  # could hide stdlib vulnerabilities of the one the binary is built with.
+                  # Not go-version-file: with GOTOOLCHAIN=local exported by setup-go above
+                  # it reads the go directive, and the default go-version-input overrides it.
+                  go-version-input: "1.27.1"
                   go-package: ./...

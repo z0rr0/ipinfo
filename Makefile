@@ -83,7 +83,7 @@ clean:
 	find ./ -type f -name "*.out" -delete
 
 tools:
-	@go get -tool github.com/golangci/golangci-lint/v2/cmd/golangci-lint@v2.13.1
+	@go get -tool github.com/golangci/golangci-lint/v2/cmd/golangci-lint@v2.14.0
 	@go get -tool github.com/4meepo/tagalign/cmd/tagalign@latest
 	@go get -tool golang.org/x/tools/go/analysis/passes/fieldalignment/cmd/fieldalignment@latest
 	@go get -tool github.com/securego/gosec/v2/cmd/gosec@latest
