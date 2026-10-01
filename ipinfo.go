@@ -32,6 +32,12 @@ const (
 	// Config is default configuration file name.
 	Config  = "config.json"
 	timeout = 30 * time.Second
+
+	// paths served before the client IP lookup.
+	healthPath  = "/health"
+	versionPath = "/version"
+	// errorBody is the response body of internal server errors.
+	errorBody = "ERROR"
 )
 
 var (
@@ -122,7 +128,7 @@ func newHandler(cfg *conf.Cfg, buildInfo *handle.BuildInfo) http.Handler {
 
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		url := strings.TrimRight(r.URL.Path, "/ ")
-		if url == "/health" {
+		if url == healthPath {
 			if e := handle.HealthHandler(w); e != nil {
 				loggerInfo.Println(e)
 			}
@@ -136,11 +142,11 @@ func newHandler(cfg *conf.Cfg, buildInfo *handle.BuildInfo) http.Handler {
 			)
 		}()
 
-		if url == "/version" {
+		if url == versionPath {
 			if e := handle.VersionHandler(w, buildInfo); e != nil {
 				loggerInfo.Println(e)
 				code = http.StatusInternalServerError
-				http.Error(w, "ERROR", code)
+				http.Error(w, errorBody, code)
 			}
 			return
 		}
@@ -149,7 +155,7 @@ func newHandler(cfg *conf.Cfg, buildInfo *handle.BuildInfo) http.Handler {
 		if e != nil {
 			loggerInfo.Println(e)
 			code = http.StatusInternalServerError
-			msg := "ERROR"
+			msg := errorBody
 			if errors.Is(e, conf.ErrInvalidIP) {
 				code, msg = http.StatusBadRequest, conf.ErrInvalidIP.Error()
 			}
@@ -165,7 +171,7 @@ func newHandler(cfg *conf.Cfg, buildInfo *handle.BuildInfo) http.Handler {
 
 		if e != nil {
 			loggerInfo.Println(e)
-			http.Error(w, "ERROR", http.StatusInternalServerError)
+			http.Error(w, errorBody, http.StatusInternalServerError)
 			code = http.StatusInternalServerError
 		}
 	})
