@@ -18,3 +18,7 @@ db/*
 
 # docker-compose.yml working directory
 /data/
+
+# AI agent instructions (ignored globally)
+!AGENTS.md
+!CLAUDE.md
