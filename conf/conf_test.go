@@ -6,7 +6,10 @@
 package conf
 
 import (
+	"errors"
+	"net/http"
 	"net/http/httptest"
+	"net/url"
 	"testing"
 	"time"
 )
@@ -153,6 +156,60 @@ func TestCfg_replaceInternal(t *testing.T) {
 	}
 }
 
+func TestCfg_targetIP(t *testing.T) {
+	const (
+		header = "193.138.218.226"
+		itself = "8.8.8.8"
+	)
+	encode := func(v string) string {
+		return url.Values{"ip": {v}}.Encode()
+	}
+	cases := []struct {
+		err      error
+		name     string
+		query    string
+		header   string
+		ipItself string
+		expected string
+	}{
+		{name: "no parameter", header: header, expected: header},
+		{name: "parameter overrides header", query: encode("8.8.8.8"), header: header, expected: "8.8.8.8"},
+		{name: "parameter without header", query: encode("8.8.8.8"), expected: "8.8.8.8"},
+		{name: "ipv6", query: encode("2001:4860:4860:0:0:0:0:8888"), expected: "2001:4860:4860::8888"},
+		{name: "ipv4-mapped ipv6", query: encode("::ffff:8.8.8.8"), expected: "8.8.8.8"},
+		{name: "empty parameter", query: "ip=", header: header, expected: header},
+		{name: "private not replaced", query: encode("192.168.1.2"), ipItself: itself, expected: "192.168.1.2"},
+		{name: "word", query: encode("abc"), err: ErrInvalidIP},
+		{name: "short ipv4", query: encode("1.2.3"), err: ErrInvalidIP},
+		{name: "list", query: encode("8.8.8.8, 1.1.1.1"), err: ErrInvalidIP},
+		{name: "ipv6 zone", query: encode("fe80::1%eth0"), err: ErrInvalidIP},
+		{name: "invalid escape ignored", query: "ip=fe80::1%eth0", header: header, expected: header},
+	}
+
+	for _, c := range cases {
+		cfg := &Cfg{IPHeader: "X-Real-Ip", IPItself: c.ipItself}
+		req := httptest.NewRequest(http.MethodGet, "https://example.com/foo?"+c.query, nil)
+		if c.header != "" {
+			req.Header.Add("X-Real-Ip", c.header)
+		}
+
+		ip, err := cfg.targetIP(req)
+		if c.err != nil {
+			if !errors.Is(err, c.err) {
+				t.Errorf("%s: expected error %v, got %v", c.name, c.err, err)
+			}
+			continue
+		}
+
+		if err != nil {
+			t.Errorf("%s: unexpected error: %v", c.name, err)
+		}
+		if ip != c.expected {
+			t.Errorf("%s: not equal %v != %v", c.name, ip, c.expected)
+		}
+	}
+}
+
 func TestCfg_GetHeaders(t *testing.T) {
 	cfg, err := New(testConfigName)
 	if err != nil {
@@ -266,6 +323,19 @@ func TestCfg_Info(t *testing.T) {
 
 	if i := *info; i != expected {
 		t.Errorf("not equal %v != %v", i, expected)
+	}
+
+	// ip query parameter without the ip header
+	req = httptest.NewRequest("GET", "https://example.com/foo?ip=193.138.218.226", nil)
+
+	info, err = cfg.Info(req)
+	if err != nil {
+		t.Fatalf("info error with ip parameter: %v", err)
+	}
+
+	expected.UTCTime, expected.Timestamp = info.UTCTime, info.Timestamp
+	if i := *info; i != expected {
+		t.Errorf("ip parameter: not equal %v != %v", i, expected)
 	}
 }
 

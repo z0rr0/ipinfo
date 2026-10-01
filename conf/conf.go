@@ -24,6 +24,9 @@ import (
 
 const defaultISOCode = "en"
 
+// ErrInvalidIP is returned when the "ip" query parameter is not a valid IP address.
+var ErrInvalidIP = errors.New("invalid ip parameter")
+
 // Cfg is configuration settings struct.
 type Cfg struct {
 	ignoredHeaders map[string]struct{}
@@ -90,7 +93,7 @@ func (i *IPInfo) Location() string {
 
 // Info returns base info about request.
 func (c *Cfg) Info(r *http.Request) (*IPInfo, error) {
-	host, err := c.GetIP(r)
+	host, err := c.targetIP(r)
 	if err != nil {
 		return nil, err
 	}
@@ -227,6 +230,21 @@ func (c *Cfg) GetParams(r *http.Request) []StrParam {
 		return result[i].Name < result[j].Name
 	})
 	return result
+}
+
+// targetIP returns the normalized "ip" query parameter when it is set, otherwise the client IP.
+func (c *Cfg) targetIP(r *http.Request) (string, error) {
+	value := r.URL.Query().Get("ip")
+	if value == "" {
+		return c.GetIP(r)
+	}
+
+	ip := net.ParseIP(value)
+	if ip == nil {
+		return "", ErrInvalidIP
+	}
+
+	return ip.String(), nil
 }
 
 // replaceInternal returns IPItself for internal (docker/same-host) private or

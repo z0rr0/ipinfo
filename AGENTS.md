@@ -47,6 +47,9 @@ make docker / docker-push     # host-arch image / multi-arch push to Docker Hub
 - Client IP is taken from the `ip_header` request header (falls back to `RemoteAddr` when empty).
   If `ip_itself` is set, private/loopback IPs are replaced with it (e.g. requests from other
   containers on the same host).
+- Query parameter `?ip=` (`Cfg.targetIP`) overrides the client IP for every format: `ip_header` is not
+  required and `ip_itself` is not applied. An invalid value gives 400 (`conf.ErrInvalidIP`), an empty one
+  falls back to the client IP, a pair with an invalid escape is silently dropped by `URL.Query()`.
 - `cache_size <= 0` disables the LRU cache.
 - Time zones are embedded via the `time/tzdata` import; the Docker image has no tzdata.
 

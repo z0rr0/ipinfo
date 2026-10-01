@@ -139,7 +139,12 @@ func newHandler(cfg *conf.Cfg, buildInfo *handle.BuildInfo) http.Handler {
 		info, e := cfg.Info(r)
 		if e != nil {
 			loggerInfo.Println(e)
-			http.Error(w, "ERROR", http.StatusInternalServerError)
+			code = http.StatusInternalServerError
+			msg := "ERROR"
+			if errors.Is(e, conf.ErrInvalidIP) {
+				code, msg = http.StatusBadRequest, conf.ErrInvalidIP.Error()
+			}
+			http.Error(w, msg, code)
 			return
 		}
 

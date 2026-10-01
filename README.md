@@ -14,6 +14,10 @@ IP info web service. It handles next requests:
 6. `/ip` - only request IP address
 7. `/health` - liveness check, returns `OK` without GeoIP lookup
 
+Any format accepts the query parameter `ip` to show info about another address instead of
+the request IP, e.g. `/json?ip=8.8.8.8` or `/ip?ip=::ffff:8.8.8.8`. An empty value is ignored,
+an invalid one returns `400 Bad Request`.
+
 Examples are in the file [api.md](api.md).
 
 ![example](example.png)
