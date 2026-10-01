@@ -2,7 +2,7 @@ module github.com/z0rr0/ipinfo
 
 go 1.27
 
-toolchain go1.27.0
+toolchain go1.27.1
 
 require (
 	github.com/hashicorp/golang-lru/v2 v2.0.7
@@ -17,7 +17,7 @@ require (
 	github.com/stretchr/testify v1.11.1 // indirect
 	golang.org/x/mod v0.40.0 // indirect
 	golang.org/x/sync v0.22.0 // indirect
-	golang.org/x/sys v0.47.0 // indirect
+	golang.org/x/sys v0.48.0 // indirect
 	golang.org/x/tools v0.49.0 // indirect
 )
 
