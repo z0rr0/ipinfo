@@ -88,6 +88,13 @@ func TextCompactHandler(w http.ResponseWriter, info *conf.IPInfo, _ *BuildInfo) 
 	return printF(err, w, "%s\n", localTime)
 }
 
+// IPHandler is handler for text/plain response with IP address only.
+func IPHandler(w http.ResponseWriter, info *conf.IPInfo, _ *BuildInfo) error {
+	w.Header().Set("Content-Type", "text/plain; charset=utf-8")
+	w.Header().Set("Cache-Control", "no-cache, no-store, must-revalidate")
+	return printF(nil, w, "%s\n", info.IP)
+}
+
 // JSONHandler is handler for application/json response.
 func JSONHandler(w http.ResponseWriter, info *conf.IPInfo, _ *BuildInfo) error {
 	w.Header().Set("Content-Type", "application/json; charset=utf-8")

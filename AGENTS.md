@@ -31,8 +31,8 @@ make docker / docker-push     # host-arch image / multi-arch push to Docker Hub
 `ipinfo.go` → `conf.Cfg.Info()` (client IP → GeoLite2 lookup → `IPInfo`) → formatter in `handle/`.
 
 - `ipinfo.go` — HTTP server, graceful shutdown. The router is built by `newHandler` (registered in
-  `main()`): a `map[string]handler` keyed by the trimmed path (`/short`, `/compact`, `/json`, `/xml`,
-  `/html`, `/full`, `/version`); anything else goes to `handle.TextHandler`. `/health` is handled
+  `main()`): a `map[string]handler` keyed by the trimmed path (`/short`, `/compact`, `/ip`, `/json`,
+  `/xml`, `/html`, `/full`, `/version`); anything else goes to `handle.TextHandler`. `/health` is handled
   first, bypassing `cfg.Info` (GeoIP lookup) and the access log. `Version`/`Revision`/`BuildDate`
   are injected with `-ldflags -X`.
 - `conf/` — JSON config, client IP detection, GeoLite2 reader behind an optional LRU cache,

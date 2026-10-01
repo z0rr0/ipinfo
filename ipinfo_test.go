@@ -41,6 +41,8 @@ func TestNewHandler(t *testing.T) {
 		{name: "health_slash", path: "/health/", code: http.StatusOK, contentType: "text/plain; charset=utf-8", body: "OK\n"},
 		{name: "json_no_ip", path: "/json", code: http.StatusInternalServerError},
 		{name: "json", path: "/json", ip: "193.138.218.226", code: http.StatusOK, contentType: "application/json; charset=utf-8"},
+		{name: "ip", path: "/ip", ip: "193.138.218.226", code: http.StatusOK, contentType: "text/plain; charset=utf-8", body: "193.138.218.226\n"},
+		{name: "ip_slash", path: "/ip/", ip: "193.138.218.226", code: http.StatusOK, contentType: "text/plain; charset=utf-8", body: "193.138.218.226\n"},
 		{name: "root", path: "/", ip: "193.138.218.226", code: http.StatusOK, contentType: "text/plain; charset=utf-8"},
 		{name: "unknown", path: "/unknown", ip: "193.138.218.226", code: http.StatusOK, contentType: "text/plain; charset=utf-8"},
 	}

@@ -471,11 +471,61 @@ func TestFullHTMLHandler(t *testing.T) {
 		"<td>Europe/Stockholm</td>",
 		"<td>Language</td>",
 		"<td>en</td>",
+		"<a href=\"/ip\">ip</a>",
 	}
 	for _, subStr := range expectedSubStrings {
 		if !strings.Contains(strBody, subStr) {
 			t.Fatalf("not found required sub-string: %v", subStr)
 		}
+	}
+}
+
+func TestIPHandler(t *testing.T) {
+	cfg, err := conf.New(testConfigName)
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer func() {
+		if closeErr := cfg.Close(); closeErr != nil {
+			t.Errorf("close error: %v", closeErr)
+		}
+	}()
+
+	req := httptest.NewRequest("GET", "https://example.com/foo", nil)
+	req.Header.Add("X-Real-Ip", "193.138.218.226")
+
+	info, err := cfg.Info(req)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	w := httptest.NewRecorder()
+	err = IPHandler(w, info, nil)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	resp := w.Result()
+	if resp.StatusCode != http.StatusOK {
+		t.Errorf("not %d status code: %v", http.StatusOK, resp.StatusCode)
+	}
+
+	if ct := resp.Header.Get("Content-Type"); ct != "text/plain; charset=utf-8" {
+		t.Errorf("not equal Content-Type: %v", ct)
+	}
+	checkNoCache(t, resp)
+
+	body, err := io.ReadAll(resp.Body)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	if strBody := string(body); strBody != "193.138.218.226\n" {
+		t.Errorf("not equal body: %q", strBody)
+	}
+
+	if err = resp.Body.Close(); err != nil {
+		t.Error(err)
 	}
 }
 

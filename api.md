@@ -23,6 +23,9 @@ Returns IP information in HTML format.
 ### GET /full
 Returns IP information in enhanced HTML format.
 
+### GET /ip
+Returns only the client IP address as a single text line.
+
 ### GET /version
 Returns application version information.
 

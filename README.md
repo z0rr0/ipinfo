@@ -11,7 +11,8 @@ IP info web service. It handles next requests:
 3. `/json` - json info about request IP
 4. `/xml` - json info about request IP
 5. `/html` - html info about request IP
-6. `/health` - liveness check, returns `OK` without GeoIP lookup
+6. `/ip` - only request IP address
+7. `/health` - liveness check, returns `OK` without GeoIP lookup
 
 Examples are in the file [api.md](api.md).
 

@@ -112,6 +112,7 @@ func newHandler(cfg *conf.Cfg, buildInfo *handle.BuildInfo) http.Handler {
 	handlers := map[string]func(http.ResponseWriter, *conf.IPInfo, *handle.BuildInfo) error{
 		"/short":   handle.TextShortHandler,
 		"/compact": handle.TextCompactHandler,
+		"/ip":      handle.IPHandler,
 		"/json":    handle.JSONHandler,
 		"/xml":     handle.XMLHandler,
 		"/html":    handle.HTMLHandler,
